@@ -57,3 +57,6 @@ node_modules/
 npm-debug.log
 
 .env
+
+application.properties
+backend/src/main/resources/application.properties

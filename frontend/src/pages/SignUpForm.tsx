@@ -141,17 +141,16 @@ const SignUpForm = () => {
                 Role
               </label>
               <select
-                id="role"
                 value={formData.role}
                 onChange={(e) =>
                   setFormData({ ...formData, role: e.target.value as Role })
                 }
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border rounded"
                 required
               >
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
+                <option value="USER">USER</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
               </select>
             </div>
 
