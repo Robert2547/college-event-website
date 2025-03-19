@@ -1,14 +1,70 @@
-import './App.css';
+import "./App.css";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { LoginForm } from "./pages/LoginForm";
+import SignUpForm from "./pages/SignUpForm";
+import { useAuthStore } from "./hooks/useAuthStore";
+import ProtectedRoute from "./routes/ProtectedRoutes";
+
+const Dashboard = () => <div>Dashboard</div>;
+const Unauthorized = () => (
+  <div>You don't have permission to access this page</div>
+);
 
 function App() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Toaster position="top-right" />
+        <Routes>
+          {/* Public routes */}
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? <Navigate to="/dashboard" /> : <LoginForm />
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              isAuthenticated ? <Navigate to="/dashboard" /> : <SignUpForm />
+            }
+          />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin routes example */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <div>Admin Dashboard</div>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
