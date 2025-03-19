@@ -31,3 +31,27 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### OS specific files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+### Logs ###
+logs/
+*.log
+
+### Application specific ###
+application-*.properties
+application-*.yml
+!application.properties
+!application.yml
+
+### Node ###
+node_modules/
+npm-debug.log
