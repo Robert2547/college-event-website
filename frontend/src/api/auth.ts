@@ -1,6 +1,5 @@
 import * as auth from "../types/auth";
 import axios from "axios";
-import { isTokenExpired } from "../utils/jwt"; // Import the JWT utility
 
 const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:8080";
 
@@ -16,8 +15,7 @@ authAxios.interceptors.request.use(
       ? JSON.parse(localStorage.getItem("auth-storage") || "{}")?.state?.token
       : null;
 
-    // Check if token exists and is not expired before adding to headers
-    if (token && !isTokenExpired(token)) {
+    if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
@@ -78,11 +76,5 @@ export const authApi = {
       console.error("Token verification error:", error);
       throw error;
     }
-  },
-
-  // Simple logout function
-  logout: () => {
-    localStorage.removeItem("auth-storage");
-    window.location.href = "/login";
   },
 };

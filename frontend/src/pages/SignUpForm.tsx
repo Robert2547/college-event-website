@@ -73,19 +73,23 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-xl overflow-hidden">
+        <div className="px-8 pt-8 pb-6">
+          <h2 className="text-left text-2xl font-bold text-gray-800 mb-2">
+            Create an account
           </h2>
-        </div>
+          <p className="text-left text-gray-500 mb-6">
+            Fill in the details below to get started
+          </p>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="rounded-md shadow-sm space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 text-left mb-1"
+              >
+                Email address
               </label>
               <input
                 id="email"
@@ -94,15 +98,18 @@ const SignUpForm = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                placeholder="Email"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                placeholder="Enter your email"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="sr-only">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700 text-left mb-1"
+                >
                   First Name
                 </label>
                 <input
@@ -112,14 +119,17 @@ const SignUpForm = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, firstName: e.target.value })
                   }
-                  placeholder="First Name"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  placeholder="First name"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="lastName" className="sr-only">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700 text-left mb-1"
+                >
                   Last Name
                 </label>
                 <input
@@ -129,23 +139,27 @@ const SignUpForm = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, lastName: e.target.value })
                   }
-                  placeholder="Last Name"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  placeholder="Last name"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="role" className="sr-only">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 text-left mb-1"
+              >
                 Role
               </label>
               <select
+                id="role"
                 value={formData.role}
                 onChange={(e) =>
                   setFormData({ ...formData, role: e.target.value as Role })
                 }
-                className="w-full p-2 border rounded"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                 required
               >
                 <option value="USER">USER</option>
@@ -155,7 +169,10 @@ const SignUpForm = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 text-left mb-1"
+              >
                 Password
               </label>
               <input
@@ -165,14 +182,17 @@ const SignUpForm = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                placeholder="Password"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                placeholder="Create a password"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="passwordConfirmation" className="sr-only">
+              <label
+                htmlFor="passwordConfirmation"
+                className="block text-sm font-medium text-gray-700 text-left mb-1"
+              >
                 Confirm Password
               </label>
               <input
@@ -185,43 +205,48 @@ const SignUpForm = () => {
                     passwordConfirmation: e.target.value,
                   })
                 }
-                placeholder="Confirm Password"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                placeholder="Confirm your password"
                 required
               />
             </div>
-          </div>
 
-          {error && (
-            <div className="text-red-500 text-sm font-medium" role="alert">
-              {error}
+            {error && (
+              <div
+                className="bg-red-50 text-red-500 text-sm font-medium p-3 rounded-lg"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-colors ${
+                  isLoading
+                    ? "bg-indigo-400 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                }`}
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </button>
             </div>
-          )}
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                isLoading
-                  ? "bg-indigo-400"
-                  : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              }`}
-            >
-              {isLoading ? "Creating Account..." : "Sign Up"}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link
-              to="/login"
-              className="text-indigo-600 hover:text-indigo-500 font-medium"
-            >
-              Sign In
-            </Link>
-          </div>
-        </form>
+            <div className="text-center mt-6 pt-4 border-t border-gray-200">
+              <span className="text-gray-600 text-sm">
+                Already have an account?{" "}
+              </span>
+              <Link
+                to="/login"
+                className="text-indigo-600 hover:text-indigo-500 font-medium text-sm"
+              >
+                Sign in
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

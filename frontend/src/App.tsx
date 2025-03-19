@@ -6,7 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { LoginForm } from "./pages/LoginForm";
+import LoginForm from "./pages/LoginForm";
 import SignUpForm from "./pages/SignUpForm";
 import { useAuthStore } from "./hooks/useAuthStore";
 import ProtectedRoute from "./routes/ProtectedRoutes";
