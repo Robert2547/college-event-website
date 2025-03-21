@@ -4,6 +4,14 @@ import toast from "react-hot-toast";
 import { SignUpCredentials, Role } from "../types/auth";
 import { authApi } from "../api/auth";
 import { useAuthStore } from "../hooks/useAuthStore";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import {
+  useTogglePasswordVisibility,
+  validateEmail,
+  validatePassword,
+  validatePasswordMatch,
+  validateRequired,
+} from "../utils/formValidate";
 
 const SignUpForm = () => {
   const navigate = useNavigate();
@@ -18,11 +26,63 @@ const SignUpForm = () => {
     role: "USER",
   });
 
+  // Form validation errors
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    passwordConfirmation: "",
+    firstName: "",
+    lastName: "",
+  });
+
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Use password visibility hooks
+  const passwordVisibility = useTogglePasswordVisibility();
+  const confirmPasswordVisibility = useTogglePasswordVisibility();
+
+  // Handle input change
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Clear error for this field
+    setErrors({
+      ...errors,
+      [name]: "",
+    });
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {
+      email: validateEmail(formData.email),
+      password: validatePassword(formData.password),
+      passwordConfirmation: validatePasswordMatch(
+        formData.password,
+        formData.passwordConfirmation
+      ),
+      firstName: validateRequired(formData.firstName, "First name"),
+      lastName: validateRequired(formData.lastName, "Last name"),
+    };
+
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    return !Object.values(newErrors).some((error) => error !== "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
     setError("");
     setIsLoading(true);
 
@@ -30,15 +90,6 @@ const SignUpForm = () => {
     const loadingToast = toast.loading("Creating your account...");
 
     try {
-      // Password match validation
-      if (formData.password !== formData.passwordConfirmation) {
-        toast.dismiss(loadingToast);
-        toast.error("Passwords do not match");
-        setError("Passwords do not match");
-        setIsLoading(false);
-        return;
-      }
-
       // Sign up
       const authResponse = await authApi.signUp(formData);
 
@@ -84,6 +135,7 @@ const SignUpForm = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email field */}
             <div>
               <label
                 htmlFor="email"
@@ -93,17 +145,24 @@ const SignUpForm = () => {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                onChange={handleChange}
+                className={`block w-full px-4 py-3 border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm`}
                 placeholder="Enter your email"
                 required
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500 text-left">
+                  {errors.email}
+                </p>
+              )}
             </div>
 
+            {/* First and Last Name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
@@ -114,15 +173,21 @@ const SignUpForm = () => {
                 </label>
                 <input
                   id="firstName"
+                  name="firstName"
                   type="text"
                   value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  onChange={handleChange}
+                  className={`block w-full px-4 py-3 border ${
+                    errors.firstName ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm`}
                   placeholder="First name"
                   required
                 />
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-500 text-left">
+                    {errors.firstName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -134,18 +199,25 @@ const SignUpForm = () => {
                 </label>
                 <input
                   id="lastName"
+                  name="lastName"
                   type="text"
                   value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  onChange={handleChange}
+                  className={`block w-full px-4 py-3 border ${
+                    errors.lastName ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm`}
                   placeholder="Last name"
                   required
                 />
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-500 text-left">
+                    {errors.lastName}
+                  </p>
+                )}
               </div>
             </div>
 
+            {/* Role selection */}
             <div>
               <label
                 htmlFor="role"
@@ -155,10 +227,9 @@ const SignUpForm = () => {
               </label>
               <select
                 id="role"
+                name="role"
                 value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value as Role })
-                }
+                onChange={handleChange}
                 className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                 required
               >
@@ -168,6 +239,7 @@ const SignUpForm = () => {
               </select>
             </div>
 
+            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -175,19 +247,39 @@ const SignUpForm = () => {
               >
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                placeholder="Create a password"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={passwordVisibility.showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`block w-full px-4 py-3 border ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm pr-10`}
+                  placeholder="Create a password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={passwordVisibility.togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {passwordVisibility.showPassword ? (
+                    <EyeOffIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-500 text-left">
+                  {errors.password}
+                </p>
+              )}
             </div>
 
+            {/* Confirm Password */}
             <div>
               <label
                 htmlFor="passwordConfirmation"
@@ -195,20 +287,40 @@ const SignUpForm = () => {
               >
                 Confirm Password
               </label>
-              <input
-                id="passwordConfirmation"
-                type="password"
-                value={formData.passwordConfirmation}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    passwordConfirmation: e.target.value,
-                  })
-                }
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                placeholder="Confirm your password"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="passwordConfirmation"
+                  name="passwordConfirmation"
+                  type={
+                    confirmPasswordVisibility.showPassword ? "text" : "password"
+                  }
+                  value={formData.passwordConfirmation}
+                  onChange={handleChange}
+                  className={`block w-full px-4 py-3 border ${
+                    errors.passwordConfirmation
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm pr-10`}
+                  placeholder="Confirm your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={confirmPasswordVisibility.togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {confirmPasswordVisibility.showPassword ? (
+                    <EyeOffIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.passwordConfirmation && (
+                <p className="mt-1 text-sm text-red-500 text-left">
+                  {errors.passwordConfirmation}
+                </p>
+              )}
             </div>
 
             {error && (

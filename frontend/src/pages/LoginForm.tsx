@@ -4,6 +4,12 @@ import { useAuthStore } from "../hooks/useAuthStore";
 import { authApi } from "../api/auth";
 import { LoginCredentials } from "../types/auth";
 import toast from "react-hot-toast";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import {
+  useTogglePasswordVisibility,
+  validateEmail,
+  validatePassword,
+} from "../utils/formValidate";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -15,8 +21,43 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  // Form validation errors
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  // Use password visibility hook
+  const { showPassword, togglePasswordVisibility } =
+    useTogglePasswordVisibility();
+
+  // Handle input change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCredentials({ ...credentials, [name]: value });
+
+    // Clear errors as user types
+    if (name === "email") setEmailError("");
+    if (name === "password") setPasswordError("");
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const emailError = validateEmail(credentials.email);
+    const passwordError = validatePassword(credentials.password);
+
+    setEmailError(emailError);
+    setPasswordError(passwordError);
+
+    return !emailError && !passwordError;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
     setError("");
     setIsLoading(true);
 
@@ -70,6 +111,7 @@ const LoginForm = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-4">
+              {/* Email input */}
               <div>
                 <label
                   htmlFor="email"
@@ -84,14 +126,20 @@ const LoginForm = () => {
                   autoComplete="email"
                   required
                   value={credentials.email}
-                  onChange={(e) =>
-                    setCredentials({ ...credentials, email: e.target.value })
-                  }
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  onChange={handleChange}
+                  className={`block w-full px-4 py-3 border ${
+                    emailError ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm`}
                   placeholder="Enter your email"
                 />
+                {emailError && (
+                  <p className="mt-1 text-sm text-red-500 text-left">
+                    {emailError}
+                  </p>
+                )}
               </div>
 
+              {/* Password input */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label
@@ -107,19 +155,37 @@ const LoginForm = () => {
                     Forgot password?
                   </a>
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={credentials.password}
-                  onChange={(e) =>
-                    setCredentials({ ...credentials, password: e.target.value })
-                  }
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                  placeholder="Enter your password"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={credentials.password}
+                    onChange={handleChange}
+                    className={`block w-full px-4 py-3 border ${
+                      passwordError ? "border-red-500" : "border-gray-300"
+                    } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm pr-10`}
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOffIcon className="h-5 w-5" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                {passwordError && (
+                  <p className="mt-1 text-sm text-red-500 text-left">
+                    {passwordError}
+                  </p>
+                )}
               </div>
             </div>
 

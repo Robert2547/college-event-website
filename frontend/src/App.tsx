@@ -10,8 +10,8 @@ import LoginForm from "./pages/LoginForm";
 import SignUpForm from "./pages/SignUpForm";
 import { useAuthStore } from "./hooks/useAuthStore";
 import ProtectedRoute from "./routes/ProtectedRoutes";
+import Dashboard from "./pages/Dashboard";
 
-const Dashboard = () => <div>Dashboard</div>;
 const Unauthorized = () => (
   <div>You don't have permission to access this page</div>
 );
@@ -22,7 +22,7 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <Toaster position="top-right" />
+        <Toaster position="top-center" />
         <Routes>
           {/* Public routes */}
           <Route
