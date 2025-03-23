@@ -11,10 +11,9 @@ import SignUpForm from "./pages/SignUpForm";
 import { useAuthStore } from "./hooks/useAuthStore";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import Dashboard from "./pages/Dashboard";
-
-const Unauthorized = () => (
-  <div>You don't have permission to access this page</div>
-);
+import AdminDashboard from "./pages/AdminDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import Unauthorized from "./pages/Unathorized";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -54,7 +53,17 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute requiredRole="ADMIN">
-                <div>Admin Dashboard</div>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin routes example */}
+          <Route
+            path="/superAdmin"
+            element={
+              <ProtectedRoute requiredRole="SUPER_ADMIN">
+                <SuperAdminDashboard />
               </ProtectedRoute>
             }
           />
