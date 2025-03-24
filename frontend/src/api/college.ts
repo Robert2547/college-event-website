@@ -27,7 +27,7 @@ export const collegeApi = {
   // Create college (Super Admin only)
   createCollege: async (collegeData: CollegeRequest): Promise<College> => {
     try {
-      const response = await authAxios.post("/api/colleges", collegeData);
+      const response = await authAxios.post("/api/superadmin/colleges", collegeData);
       return response.data;
     } catch (error) {
       console.error("Create college error:", error);
@@ -41,7 +41,7 @@ export const collegeApi = {
     collegeData: CollegeRequest
   ): Promise<College> => {
     try {
-      const response = await authAxios.put(`/api/colleges/${id}`, collegeData);
+      const response = await authAxios.put(`/api/superadmin/colleges/${id}`, collegeData);
       return response.data;
     } catch (error) {
       console.error("Update college error:", error);
@@ -52,7 +52,7 @@ export const collegeApi = {
   // Delete college (Super Admin only)
   deleteCollege: async (id: number): Promise<void> => {
     try {
-      await authAxios.delete(`/api/colleges/${id}`);
+      await authAxios.delete(`/api/superadmin/colleges/${id}`);
     } catch (error) {
       console.error("Delete college error:", error);
       throw error;

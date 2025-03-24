@@ -33,7 +33,7 @@ public class User {
 
     // Many users to one college
     @ManyToOne
-    @JoinColumn(name = "college_id", nullable = false)
+    @JoinColumn(name = "college_id")
     private College college;
 
 }
