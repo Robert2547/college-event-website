@@ -31,14 +31,14 @@ public class PublicEventService {
     @Autowired
     private EventService eventService;
 
-    // Get all pending public events
+    // Get all pending public events (Super Admin only)
     public List<EventResponse> getPendingPublicEvents() {
         // Get authenticated user
         User currentUser = securityUtils.getCurrentUser();
 
-        // Check if user is admin or super admin
-        if (!securityUtils.isAdmin()) {
-            throw new AccessDeniedException("Only admins can view pending public events");
+        // Check if user is super admin
+        if (!securityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("Only super admins can view pending public events");
         }
 
         // Get pending events
@@ -50,15 +50,15 @@ public class PublicEventService {
                 .collect(Collectors.toList());
     }
 
-    // Approve a public event
+    // Approve a public event (Super Admin only)
     @Transactional
     public EventResponse approvePublicEvent(Long eventId) {
         // Get authenticated user
         User currentUser = securityUtils.getCurrentUser();
 
-        // Check if user is admin or super admin
-        if (!securityUtils.isAdmin()) {
-            throw new AccessDeniedException("Only admins can approve public events");
+        // Check if user is super admin
+        if (!securityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("Only super admins can approve public events");
         }
 
         // Find public event
@@ -76,15 +76,15 @@ public class PublicEventService {
         return eventService.getEventById(eventId);
     }
 
-    // Reject a public event
+    // Reject a public event (Super Admin only)
     @Transactional
     public void rejectPublicEvent(Long eventId) {
         // Get authenticated user
         User currentUser = securityUtils.getCurrentUser();
 
-        // Check if user is admin or super admin
-        if (!securityUtils.isAdmin()) {
-            throw new AccessDeniedException("Only admins can reject public events");
+        // Check if user is super admin
+        if (!securityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("Only super admins can reject public events");
         }
 
         // Find event

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -262,7 +263,7 @@ public class EventService {
         // Filter events based on user access
         List<Event> accessibleEvents = events.stream()
                 .filter(event -> userHasAccessToEvent(event, currentUser))
-                .collect(Collectors.toList());
+                .toList();
 
         // Convert to DTOs and return
         return accessibleEvents.stream()
@@ -281,7 +282,7 @@ public class EventService {
         // Filter events based on user access
         List<Event> accessibleEvents = events.stream()
                 .filter(event -> userHasAccessToEvent(event, currentUser))
-                .collect(Collectors.toList());
+                .toList();
 
         // Convert to DTOs and return
         return accessibleEvents.stream()
@@ -358,5 +359,51 @@ public class EventService {
         rsoEvent.setRso(rso);
 
         rsoEventRepository.save(rsoEvent);
+    }
+
+    // Get events by date range
+    public List<EventResponse> getEventsByDateRange(LocalDate startDate, LocalDate endDate) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Get events by date range
+        List<Event> events = eventRepository.findByDateBetween(startDate, endDate);
+
+        // Filter events based on user access
+        List<Event> accessibleEvents = events.stream()
+                .filter(event -> userHasAccessToEvent(event, currentUser))
+                .toList();
+
+        // Convert to DTOs and return
+        return accessibleEvents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get events by RSO
+    public List<EventResponse> getEventsByRso(Long rsoId) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Check if user is a member of the RSO
+        if (!rsoMembershipRepository.existsByUserIdAndRsoId(currentUser.getId(), rsoId)) {
+            throw new AccessDeniedException("You are not a member of this RSO");
+        }
+
+        // Find RSO events
+        List<RsoEvent> rsoEvents = rsoEventRepository.findByRsoId(rsoId);
+
+        // Extract event IDs
+        List<Long> eventIds = rsoEvents.stream()
+                .map(RsoEvent::getId)
+                .collect(Collectors.toList());
+
+        // Get events
+        List<Event> events = eventRepository.findAllById(eventIds);
+
+        // Convert to DTOs and return
+        return events.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 }
