@@ -2,15 +2,16 @@ package edu.ucf.college_event_website.service;
 
 import edu.ucf.college_event_website.dto.EventCreateRequest;
 import edu.ucf.college_event_website.dto.EventResponse;
+import edu.ucf.college_event_website.dto.EventUpdateRequest;
 import edu.ucf.college_event_website.model.*;
 import edu.ucf.college_event_website.repository.*;
+import edu.ucf.college_event_website.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,9 +22,6 @@ public class EventService {
 
     @Autowired
     private CollegeRepository collegeRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private PrivateEventRepository privateEventRepository;
@@ -45,6 +43,12 @@ public class EventService {
 
     @Autowired
     private RsoRepository rsoRepository;
+
+    @Autowired
+    private RsoMembershipRepository rsoMembershipRepository;
+
+    @Autowired
+    private SecurityUtils securityUtils;
 
     // Convert Event to EventResponse
     private EventResponse convertToDTO(Event event) {
@@ -94,17 +98,15 @@ public class EventService {
     @Transactional
     public EventResponse createEvent(EventCreateRequest request) {
         // Get authenticated user
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = securityUtils.getCurrentUser();
 
         // Get college
         College college = collegeRepository.findById(request.getCollegeId())
-                .orElseThrow(() -> new RuntimeException("College not found"));
+                .orElseThrow(() -> new EntityNotFoundException("College not found"));
 
         // Get location
         Location location = locationRepository.findById(request.getLocationId())
-                .orElseThrow(() -> new RuntimeException("Location not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Location not found"));
 
         // Create new event
         Event event = new Event();
@@ -137,71 +139,191 @@ public class EventService {
         return convertToDTO(savedEvent);
     }
 
-    // Update an event
+    // Update event
     @Transactional
-    public EventResponse updateEvent(Long id, EventCreateRequest request) throws AccessDeniedException {
+    public EventResponse updateEvent(Long id, EventUpdateRequest request) {
         // Get authenticated user
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = securityUtils.getCurrentUser();
 
-        // Get event
+        // Find event
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found"));
 
-        // Check if user has rights to update
-        if (!canUpdateEvent(currentUser, event)) {
+        // Check if user owns the event or is an admin
+        if (!event.getCreatedBy().getId().equals(currentUser.getId()) &&
+                !securityUtils.isSuperAdmin()) {
             throw new AccessDeniedException("You do not have permission to update this event");
         }
 
-        // Get location if it's changed
+        // Get location if changed
         if (request.getLocationId() != null) {
             Location location = locationRepository.findById(request.getLocationId())
                     .orElseThrow(() -> new EntityNotFoundException("Location not found"));
             event.setLocation(location);
         }
 
-        // Update basic event properties
+        // Update event fields
         if (request.getName() != null) event.setName(request.getName());
         if (request.getDescription() != null) event.setDescription(request.getDescription());
         if (request.getTime() != null) event.setTime(request.getTime());
         if (request.getDate() != null) event.setDate(request.getDate());
-        if (request.getContactPhone() != null) event.setContactPhone(request.getContactPhone());
         if (request.getContactEmail() != null) event.setContactEmail(request.getContactEmail());
+        if (request.getContactPhone() != null) event.setContactPhone(request.getContactPhone());
 
         // Save updated event
         Event updatedEvent = eventRepository.save(event);
 
+        // Convert to DTO and return
         return convertToDTO(updatedEvent);
-
     }
 
-    private boolean canUpdateEvent(User user, Event event) {
-        // Event creator can update
-        if (event.getCreatedBy().getId().equals(user.getId())) {
+    // Delete event
+    @Transactional
+    public void deleteEvent(Long id) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Find event
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        // Check if user owns the event or is an admin
+        if (!event.getCreatedBy().getId().equals(currentUser.getId()) &&
+                !securityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("You do not have permission to delete this event");
+        }
+
+        // Delete specialized event record first
+        switch (event.getEventType()) {
+            case PUBLIC:
+                publicEventRepository.deleteById(id);
+                break;
+            case PRIVATE:
+                privateEventRepository.deleteById(id);
+                break;
+            case RSO:
+                rsoEventRepository.deleteById(id);
+                break;
+        }
+
+        // Delete comments and ratings related to this event
+        commentRepository.findByEventIdOrderByTimestampDesc(id)
+                .forEach(comment -> commentRepository.delete(comment));
+
+        // Delete the event
+        eventRepository.delete(event);
+    }
+
+    // Get event by ID (with access check)
+    public EventResponse getEventById(Long id) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Find event
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        // Check if user has access to this event
+        if (!userHasAccessToEvent(event, currentUser)) {
+            throw new AccessDeniedException("You do not have permission to view this event");
+        }
+
+        // Convert to DTO and return
+        return convertToDTO(event);
+    }
+
+    // Get all events accessible by current user
+    public List<EventResponse> getEventsForCurrentUser() {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Get all events
+        List<Event> allEvents = eventRepository.findAll();
+
+        // Filter events based on user access
+        List<Event> accessibleEvents = allEvents.stream()
+                .filter(event -> userHasAccessToEvent(event, currentUser))
+                .collect(Collectors.toList());
+
+        // Convert to DTOs and return
+        return accessibleEvents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get events by type
+    public List<EventResponse> getEventsByType(EventType eventType) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Get events by type
+        List<Event> events = eventRepository.findByEventType(eventType);
+
+        // Filter events based on user access
+        List<Event> accessibleEvents = events.stream()
+                .filter(event -> userHasAccessToEvent(event, currentUser))
+                .collect(Collectors.toList());
+
+        // Convert to DTOs and return
+        return accessibleEvents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get events by college
+    public List<EventResponse> getEventsByCollege(Long collegeId) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Get events by college
+        List<Event> events = eventRepository.findByCollegeId(collegeId);
+
+        // Filter events based on user access
+        List<Event> accessibleEvents = events.stream()
+                .filter(event -> userHasAccessToEvent(event, currentUser))
+                .collect(Collectors.toList());
+
+        // Convert to DTOs and return
+        return accessibleEvents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Check if user has access to event
+    private boolean userHasAccessToEvent(Event event, User user) {
+        // Super admins can access all events
+        if (securityUtils.isSuperAdmin()) {
             return true;
         }
 
-        // Super admins can update any event
-        if (user.getRole() == Role.SUPER_ADMIN) {
-            return true;
+        // Public events are accessible to all users
+        if (event.getEventType() == EventType.PUBLIC) {
+            PublicEvent publicEvent = publicEventRepository.findById(event.getId()).orElse(null);
+            // Public events must be approved to be visible
+            return publicEvent != null && publicEvent.getApproved();
         }
 
-        // RSO admin can update their RSO events
+        // Private events are accessible to users from the same college
+        if (event.getEventType() == EventType.PRIVATE) {
+            return user.getCollege() != null &&
+                    user.getCollege().getId().equals(event.getCollege().getId());
+        }
+
+        // RSO events are accessible to members of the RSO
         if (event.getEventType() == EventType.RSO) {
             RsoEvent rsoEvent = rsoEventRepository.findById(event.getId()).orElse(null);
-            return rsoEvent != null && rsoEvent.getRso().getAdmin().getId().equals(user.getId());
+            if (rsoEvent != null) {
+                // Check if user is a member of the RSO
+                return rsoMembershipRepository.existsByUserIdAndRsoId(
+                        user.getId(), rsoEvent.getRso().getId());
+            }
         }
 
+        // If none of the above, user does not have access
         return false;
     }
 
-    // Same logic as update
-    private boolean canDeleteEvent(User user, Event event) {
-        return canUpdateEvent(user, event);
-    }
-
-    // Create a new public event
+    // Helper methods for creating specialized events
     private void createPublicEvent(Event event, EventCreateRequest request, User currentUser) {
         PublicEvent publicEvent = new PublicEvent();
         publicEvent.setEvent(event);
@@ -209,17 +331,14 @@ public class EventService {
         publicEvent.setApproved(false); // start as unapproved
 
         // Check if currentUser is SUPER_ADMIN, auto-approve
-        if (currentUser.getRole() == Role.SUPER_ADMIN) {
+        if (securityUtils.isSuperAdmin()) {
             publicEvent.setApproved(true);
             publicEvent.setSuperAdmin(currentUser);
         }
 
         publicEventRepository.save(publicEvent);
-
-
     }
 
-    // Create a new private event
     private void createPrivateEvent(Event event, EventCreateRequest request, User currentUser) {
         PrivateEvent privateEvent = new PrivateEvent();
         privateEvent.setEvent(event);
@@ -229,7 +348,6 @@ public class EventService {
         privateEventRepository.save(privateEvent);
     }
 
-    // Create a new RSO event
     private void createRsoEvent(Event event, EventCreateRequest request, User currentUser) {
         Rso rso = rsoRepository.findById(request.getRsoId())
                 .orElseThrow(() -> new EntityNotFoundException("RSO not found"));
@@ -240,25 +358,5 @@ public class EventService {
         rsoEvent.setRso(rso);
 
         rsoEventRepository.save(rsoEvent);
-    }
-
-    // Get all events accessible to the current user
-    private List<EventResponse> getAccessibleEvents() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        List<Event> events;
-
-        // If SUPER_ADMIN, get all events
-        if (currentUser.getRole().equals(Role.SUPER_ADMIN)) {
-            events = eventRepository.findAll();
-        } else {
-            events = eventRepository.findAccessibleEvents(currentUser.getId(), currentUser.getCollege().getId());
-        }
-
-        return events.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
     }
 }
