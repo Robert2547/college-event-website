@@ -1,3 +1,4 @@
+import React from "react";
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -14,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Unauthorized from "./pages/Unathorized";
+import Layout from "./components/Layout";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -36,14 +38,15 @@ function App() {
               isAuthenticated ? <Navigate to="/dashboard" /> : <SignUpForm />
             }
           />
-          <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Protected routes */}
+          {/* Protected routes with Layout */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Layout>
+                  <Dashboard />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -53,18 +56,32 @@ function App() {
             path="/admin"
             element={
               <ProtectedRoute requiredRole="ADMIN">
-                <AdminDashboard />
+                <Layout>
+                  <AdminDashboard />
+                </Layout>
               </ProtectedRoute>
             }
           />
 
-          {/* Admin routes example */}
+          {/* Super Admin routes example */}
           <Route
             path="/superAdmin"
             element={
               <ProtectedRoute requiredRole="SUPER_ADMIN">
-                <SuperAdminDashboard />
+                <Layout>
+                  <SuperAdminDashboard />
+                </Layout>
               </ProtectedRoute>
+            }
+          />
+
+          {/* Unauthorized route */}
+          <Route
+            path="/unauthorized"
+            element={
+              <Layout>
+                <Unauthorized />
+              </Layout>
             }
           />
 

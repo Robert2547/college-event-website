@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { collegeApi } from "../api/college";
 import { College, CollegeRequest } from "../types/college";
 import toast from "react-hot-toast";
+import Card from "../components/Card";
 
 const SuperAdminDashboard = () => {
-  const navigate = useNavigate();
   const [colleges, setColleges] = useState<College[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [formData, setFormData] = useState<CollegeRequest>({
     name: "",
@@ -35,9 +34,7 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -50,7 +47,7 @@ const SuperAdminDashboard = () => {
     });
   };
 
-  const handleAddCollege = async (e: React.FormEvent) => {
+  const handleAddCollege = async (e: FormEvent) => {
     e.preventDefault();
     try {
       const newCollege = await collegeApi.createCollege(formData);
@@ -74,7 +71,7 @@ const SuperAdminDashboard = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdateCollege = async (e: React.FormEvent) => {
+  const handleUpdateCollege = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedCollege) return;
 
@@ -112,12 +109,15 @@ const SuperAdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="pb-5 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl">
-            Super Admin Dashboard
-          </h2>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">College Management</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage colleges in the system
+            </p>
+          </div>
           <div className="mt-3 sm:mt-0 sm:ml-4">
             <button
               type="button"
@@ -129,9 +129,68 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
 
-        <div className="mt-8">
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
+        {/* Super Admin Actions */}
+        <div className="mt-6">
+          <Card title="Super Admin Actions">
+            <div className="divide-y divide-gray-200">
+              <div className="py-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-6 w-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">System Configuration</h3>
+                    <p className="text-sm text-gray-500">Manage system-wide settings</p>
+                  </div>
+                </div>
+                <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Configure
+                </button>
+              </div>
+              
+              <div className="py-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-6 w-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Admin Management</h3>
+                    <p className="text-sm text-gray-500">Manage administrator accounts</p>
+                  </div>
+                </div>
+                <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Manage Admins
+                </button>
+              </div>
+              
+              <div className="py-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-6 w-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">Academic Year Setup</h3>
+                    <p className="text-sm text-gray-500">Configure academic years and terms</p>
+                  </div>
+                </div>
+                <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Setup
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* College List */}
+        <div className="mt-6">
+          <Card title="Colleges">
+            <div className="overflow-hidden rounded-md border border-gray-200">
               {loading ? (
                 <div className="p-4 text-center">Loading...</div>
               ) : colleges.length === 0 ? (
@@ -139,51 +198,59 @@ const SuperAdminDashboard = () => {
                   No colleges found.
                 </div>
               ) : (
-                colleges.map((college) => (
-                  <li key={college.id}>
-                    <div className="px-4 py-4 sm:px-6">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm font-medium text-indigo-600 truncate">
-                          {college.name}
-                        </div>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {college.location}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mt-2 flex justify-between">
-                        <div className="sm:flex">
-                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <p className="truncate">{college.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            type="button"
-                            onClick={() => handleEditClick(college)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCollege(college.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-500">
-                        Created by: {college.createdBy}
-                      </div>
-                    </div>
-                  </li>
-                ))
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Location
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created By
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {colleges.map((college) => (
+                        <tr key={college.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{college.name}</div>
+                            <div className="text-sm text-gray-500">{college.description}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{college.location}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{college.createdBy}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button
+                              onClick={() => handleEditClick(college)}
+                              className="text-indigo-600 hover:text-indigo-900 mr-4"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCollege(college.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </ul>
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
 
@@ -206,65 +273,63 @@ const SuperAdminDashboard = () => {
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <form onSubmit={handleAddCollege}>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3
-                        className="text-lg leading-6 font-medium text-gray-900"
-                        id="modal-headline"
-                      >
-                        Add New College
-                      </h3>
-                      <div className="mt-4 space-y-4">
-                        <div>
-                          <label
-                            htmlFor="name"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            College Name
-                          </label>
-                          <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="location"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Location
-                          </label>
-                          <input
-                            type="text"
-                            name="location"
-                            id="location"
-                            value={formData.location}
-                            onChange={handleInputChange}
-                            required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="description"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Description
-                          </label>
-                          <textarea
-                            id="description"
-                            name="description"
-                            rows={3}
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
+                  <div>
+                    <h3
+                      className="text-lg leading-6 font-medium text-gray-900"
+                      id="modal-headline"
+                    >
+                      Add New College
+                    </h3>
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          College Name
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          id="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          required
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="location"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Location
+                        </label>
+                        <input
+                          type="text"
+                          name="location"
+                          id="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          required
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="description"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Description
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          rows={3}
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
                       </div>
                     </div>
                   </div>
@@ -312,65 +377,63 @@ const SuperAdminDashboard = () => {
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <form onSubmit={handleUpdateCollege}>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3
-                        className="text-lg leading-6 font-medium text-gray-900"
-                        id="modal-headline"
-                      >
-                        Edit College
-                      </h3>
-                      <div className="mt-4 space-y-4">
-                        <div>
-                          <label
-                            htmlFor="name"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            College Name
-                          </label>
-                          <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="location"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Location
-                          </label>
-                          <input
-                            type="text"
-                            name="location"
-                            id="location"
-                            value={formData.location}
-                            onChange={handleInputChange}
-                            required
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="description"
-                            className="block text-sm font-medium text-gray-700"
-                          >
-                            Description
-                          </label>
-                          <textarea
-                            id="description"
-                            name="description"
-                            rows={3}
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
+                  <div>
+                    <h3
+                      className="text-lg leading-6 font-medium text-gray-900"
+                      id="modal-headline"
+                    >
+                      Edit College
+                    </h3>
+                    <div className="mt-4 space-y-4">
+                      <div>
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          College Name
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          id="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          required
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="location"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Location
+                        </label>
+                        <input
+                          type="text"
+                          name="location"
+                          id="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          required
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="description"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Description
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          rows={3}
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
                       </div>
                     </div>
                   </div>
