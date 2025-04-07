@@ -2,12 +2,10 @@ package edu.ucf.college_event_website.service;
 
 import edu.ucf.college_event_website.dto.CollegeRequest;
 import edu.ucf.college_event_website.dto.CollegeResponse;
-import edu.ucf.college_event_website.model.College;
-import edu.ucf.college_event_website.model.Role;
-import edu.ucf.college_event_website.model.User;
-import edu.ucf.college_event_website.repository.CollegeRepository;
-import edu.ucf.college_event_website.repository.UserRepository;
+import edu.ucf.college_event_website.model.*;
+import edu.ucf.college_event_website.repository.*;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +24,31 @@ public class CollegeService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RsoRepository rsoRepository;
+
+    @Autowired
+    private RsoEventRepository rsoEventRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private RatingRepository ratingRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
+
+    @Autowired
+    private PublicEventRepository publicEventRepository;
+
+    @Autowired
+    private PrivateEventRepository privateEventRepository;
+
+    @Autowired
+    private RsoMembershipRepository rsoMembershipRepository;
+
 
     // Helper methods to convert College entity to DTO
     private CollegeResponse convertToDTO(College college) {
@@ -118,15 +141,75 @@ public class CollegeService {
     }
 
     // Delete college (Super Admin ONLY)
+    @Transactional
     public void deleteCollege(Long id) throws AccessDeniedException {
-        /// Get user that is auth and super_admin
+        // Get authenticated user
         User currentUser = getAuthenticatedAndSuperAdmin();
 
         // Find college
         College college = collegeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("College not found"));
 
-        // Delete college
+        // 1. First handle RSO events since they depend on RSOs
+        List<Rso> rsos = rsoRepository.findByCollegeId(id);
+        for (Rso rso : rsos) {
+            // Get all RSO events
+            List<RsoEvent> rsoEvents = rsoEventRepository.findByRsoId(rso.getId());
+            for (RsoEvent rsoEvent : rsoEvents) {
+                // Delete comments for this event
+                commentRepository.deleteByEventId(rsoEvent.getEvent().getId());
+
+                // Delete ratings for this event
+                ratingRepository.deleteByEventId(rsoEvent.getEvent().getId());
+
+                // Delete RSO event
+                rsoEventRepository.deleteById(rsoEvent.getId());
+
+                // Delete base event
+                eventRepository.deleteById(rsoEvent.getEvent().getId());
+            }
+
+            // Delete RSO memberships
+            rsoMembershipRepository.deleteByRsoId(rso.getId());
+
+            // Delete RSO
+            rsoRepository.delete(rso);
+        }
+
+        // 2. Handle all other events (public and private)
+        List<Event> events = eventRepository.findByCollegeId(id);
+        for (Event event : events) {
+            // Skip RSO events (already handled)
+            if (event.getEventType() == EventType.RSO) {
+                continue;
+            }
+
+            // Delete comments
+            commentRepository.deleteByEventId(event.getId());
+
+            // Delete ratings
+            ratingRepository.deleteByEventId(event.getId());
+
+            // Delete specific event type
+            if (event.getEventType() == EventType.PUBLIC) {
+                publicEventRepository.deleteById(event.getId());
+            } else if (event.getEventType() == EventType.PRIVATE) {
+                privateEventRepository.deleteById(event.getId());
+            }
+
+            // Delete base event
+            eventRepository.delete(event);
+        }
+
+        // 3. Handle users (set college to null if needed)
+        List<User> users = userRepository.findByCollegeId(id);
+        for (User user : users) {
+            // Set college to null instead of deleting users
+            user.setCollege(null);
+            userRepository.save(user);
+        }
+
+        // 4. Finally delete the college
         collegeRepository.delete(college);
     }
 

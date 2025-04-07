@@ -17,4 +17,5 @@ public interface RatingRepository extends JpaRepository<Rating, RatingKey> {
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
 
+    void deleteByEventId(Long id);
 }

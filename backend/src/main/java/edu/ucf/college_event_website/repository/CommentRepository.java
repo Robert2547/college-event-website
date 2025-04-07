@@ -10,4 +10,6 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     // Find comments for a specific event
     List<Comment> findByEventIdOrderByTimestampDesc(Long eventId);
+
+    void deleteByEventId(Long id);
 }
