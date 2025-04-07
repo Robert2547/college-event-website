@@ -51,12 +51,15 @@ const AdminDashboard = () => {
   // API Operations - RSOs
   const handleRsoCreate = async (formData: RsoRequest) => {
     try {
+      console.log("Creating RSO with data:", formData);
       const newRso = await rsoApi.createRso(formData);
+      console.log("RSO created successfully:", newRso);
       setRsos([...rsos, newRso]);
       toast.success("RSO created successfully");
       return true;
     } catch (error) {
       toast.error("Failed to create RSO");
+      console.error("Error creating RSO:", error);
       return false;
     }
   };

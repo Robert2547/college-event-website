@@ -14,7 +14,9 @@ export interface Rso {
 export interface RsoRequest {
   name: string;
   description: string;
-  collegeId: number;
+  college: {
+    id: number;
+  }
 }
 
 export interface RsoMember {

@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Card from "../Card";
 import Modal from "../Modal";
 import RsoForm from "./RsoForm";
 import { Rso, RsoRequest } from "../../types/rso";
 import { rsoApi } from "../../api/rso";
+import { collegeApi } from "../../api/college";
+import { College } from "../../types/college";
 import toast from "react-hot-toast";
 
 interface RsosTabProps {
@@ -34,25 +36,68 @@ const RsosTab: React.FC<RsosTabProps> = ({
     rso: null,
   });
 
+  // Add colleges state
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [loadingColleges, setLoadingColleges] = useState(false);
+
   const [formData, setFormData] = useState<RsoRequest>({
     name: "",
     description: "",
-    collegeId: userId,
+    college: {
+      id: 0, // Initialize with 0, will be updated once colleges are loaded
+    },
   });
+
+  // Fetch colleges on component mount
+  useEffect(() => {
+    fetchColleges();
+  }, []);
+
+  // Fetch colleges function
+  const fetchColleges = async () => {
+    setLoadingColleges(true);
+    try {
+      const collegeData = await collegeApi.getAllColleges();
+      setColleges(collegeData);
+
+      // If we have colleges, update the formData with the first college's ID
+      if (collegeData.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          college: {
+            id: collegeData[0].id,
+          },
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching colleges:", error);
+      toast.error("Failed to load colleges");
+    } finally {
+      setLoadingColleges(false);
+    }
+  };
 
   // Modal handlers
   const openModal = (type: "add" | "edit" | "delete", rso?: Rso) => {
     if (type === "add") {
+      // Use the first college ID if available, or keep the current one
+      const collegeId =
+        colleges.length > 0 ? colleges[0].id : formData.college.id;
+
       setFormData({
         name: "",
         description: "",
-        collegeId: userId,
+        college: {
+          id: collegeId,
+        },
       });
     } else if (type === "edit" && rso) {
       setFormData({
         name: rso.name,
         description: rso.description,
-        collegeId: rso.collegeId,
+        college: {
+          id: rso.collegeId,
+        },
       });
     }
 
@@ -71,7 +116,17 @@ const RsosTab: React.FC<RsosTabProps> = ({
   const handleSubmit = async () => {
     let success = false;
 
+    // Add a validation check to ensure college ID is valid
+    if (
+      modal.type !== "delete" &&
+      !colleges.some((c) => c.id === formData.college.id)
+    ) {
+      toast.error("Please select a valid college");
+      return;
+    }
+
     if (modal.type === "add") {
+      console.log("Submitting RSO creation with data:", formData);
       success = await onCreateRso(formData);
     } else if (modal.type === "edit" && modal.rso) {
       success = await onUpdateRso(modal.rso.id, formData);
@@ -199,6 +254,7 @@ const RsosTab: React.FC<RsosTabProps> = ({
             <button
               onClick={() => openModal("add")}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={colleges.length === 0}
             >
               Create New RSO
             </button>
@@ -217,7 +273,12 @@ const RsosTab: React.FC<RsosTabProps> = ({
         confirmText={modal.type === "add" ? "Create RSO" : "Update RSO"}
       >
         <div className="p-4">
-          <RsoForm initialData={formData} onSubmit={setFormData} />
+          <RsoForm
+            initialData={formData}
+            onSubmit={setFormData}
+            colleges={colleges}
+            loadingColleges={loadingColleges}
+          />
         </div>
       </Modal>
 

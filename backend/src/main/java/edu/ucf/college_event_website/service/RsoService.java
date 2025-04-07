@@ -58,14 +58,18 @@ public class RsoService {
             throw new AccessDeniedException("Only administrators can create RSOs");
         }
 
-        // Find college
-        College college = collegeRepository.findById(rso.getCollege().getId())
+        // Find college - THIS IS THE MISSING STEP
+        Long collegeId = rso.getCollege() != null ? rso.getCollege().getId() : null;
+        if (collegeId == null) {
+            throw new IllegalArgumentException("College ID is required");
+        }
+
+        College college = collegeRepository.findById(collegeId)
                 .orElseThrow(() -> new EntityNotFoundException("College not found"));
 
-        // Set admin and status
+        // Set admin and college properly
         rso.setAdmin(currentUser);
-
-        //TODO: All 5 members with same email address
+        rso.setCollege(college); // Set the full college object
         rso.setStatus(RsoStatus.ACTIVE);
 
         // Save RSO
