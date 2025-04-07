@@ -35,7 +35,7 @@ const AdminDashboard = () => {
       type: "RSO",
       category: "",
       rsoId: 1,
-    }
+    },
   ];
 
   return (
