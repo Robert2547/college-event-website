@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { collegeApi } from "../api/college";
 import { College, CollegeRequest } from "../types/college";
 import toast from "react-hot-toast";
@@ -58,12 +58,12 @@ const SuperAdminDashboard = () => {
   };
 
   const handleOpenEditModal = (college: College) => {
-    setSelectedCollege(college);
     setFormData({
       name: college.name,
       location: college.location,
       description: college.description,
     });
+    setSelectedCollege(college);
     setModalType(ModalType.EDIT);
   };
 
@@ -79,7 +79,6 @@ const SuperAdminDashboard = () => {
   const handleFormSubmit = (data: CollegeRequest) => {
     console.log("Form submitted with data:", data);
 
-    // Directly pass the data to the respective handler
     if (modalType === ModalType.ADD) {
       handleAddCollege(data);
     } else if (modalType === ModalType.EDIT && selectedCollege) {
@@ -120,7 +119,7 @@ const SuperAdminDashboard = () => {
       toast.error("Failed to update college");
     }
   };
-  
+
   const handleDeleteCollege = async () => {
     if (!selectedCollege) return;
 
@@ -251,10 +250,24 @@ const SuperAdminDashboard = () => {
         isOpen={modalType === ModalType.ADD}
         title="Add New College"
         onClose={handleCloseModal}
-        onConfirm={() => handleFormSubmit(formData)}
+        onConfirm={() => {
+          const form = document.querySelector("form");
+          if (form) {
+            const submitEvent = new Event("submit", {
+              cancelable: true,
+              bubbles: true,
+            });
+            form.dispatchEvent(submitEvent);
+          }
+        }}
         confirmText="Add College"
       >
-        <CollegeForm initialData={formData} onSubmit={handleFormSubmit} />
+        <CollegeForm
+          initialData={formData}
+          onSubmit={(data) => {
+            handleFormSubmit(data);
+          }}
+        />
       </Modal>
 
       {/* Edit College Modal */}
@@ -262,10 +275,24 @@ const SuperAdminDashboard = () => {
         isOpen={modalType === ModalType.EDIT}
         title="Edit College"
         onClose={handleCloseModal}
-        onConfirm={() => handleFormSubmit(formData)}
+        onConfirm={() => {
+          const form = document.querySelector("form");
+          if (form) {
+            const submitEvent = new Event("submit", {
+              cancelable: true,
+              bubbles: true,
+            });
+            form.dispatchEvent(submitEvent);
+          }
+        }}
         confirmText="Update College"
       >
-        <CollegeForm initialData={formData} onSubmit={handleFormSubmit} />
+        <CollegeForm
+          initialData={formData}
+          onSubmit={(data) => {
+            handleFormSubmit(data);
+          }}
+        />
       </Modal>
 
       {/* Delete Confirmation Modal */}

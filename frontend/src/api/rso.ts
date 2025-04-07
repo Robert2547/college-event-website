@@ -38,7 +38,9 @@ export const rsoApi = {
   // Create new RSO (Admin only)
   createRso: async (rsoData: RsoRequest): Promise<Rso> => {
     try {
+      console.log("Creating RSO with data:", rsoData);
       const response = await authAxios.post("/api/admin/rsos", rsoData);
+      console.log("RSO created successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error("Create RSO error:", error);

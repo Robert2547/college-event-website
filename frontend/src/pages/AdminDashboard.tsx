@@ -1,41 +1,141 @@
-import React, { useState } from "react";
-import Card from "../components/Card";
+import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuthStore";
+import { rsoApi } from "../api/rso";
+import { eventApi } from "../api/event";
+import { Rso, RsoRequest } from "../types/rso";
+import { Event, EventCreateRequest, EventUpdateRequest } from "../types/event";
+import toast from "react-hot-toast";
+import EventsTab from "../components/admin/EventsTab";
+import RsosTab from "../components/admin/RsosTab";
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState("events");
+  const [rsos, setRsos] = useState<Rso[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState({ rsos: false, events: false });
 
-  // Mock data for UI demonstration only
-  const rsos = [
-    {
-      id: 1,
-      name: "RSO club name",
-      description: "2",
-      memberCount: 25,
-      status: "ACTIVE",
-    },
-    {
-      id: 2,
-      name: "E",
-      description: "",
-      memberCount: 4,
-      status: "INACTIVE",
-    },
-  ];
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchRsos();
+    fetchEvents();
+  }, []);
 
-  const events = [
-    {
-      id: 1,
-      name: "Test Event",
-      description: "Test Event Description",
-      date: "2025-04-15",
-      time: "14:00",
-      location: "T5",
-      type: "RSO",
-      category: "",
-      rsoId: 1,
-    },
+  // Data fetching functions
+  const fetchRsos = async () => {
+    setLoading((prev) => ({ ...prev, rsos: true }));
+    try {
+      const data = await rsoApi.getMyRsos();
+      setRsos(data);
+    } catch (error) {
+      console.error("Error fetching RSOs:", error);
+      toast.error("Failed to load your RSOs");
+    } finally {
+      setLoading((prev) => ({ ...prev, rsos: false }));
+    }
+  };
+
+  const fetchEvents = async () => {
+    setLoading((prev) => ({ ...prev, events: true }));
+    try {
+      const data = await eventApi.getAllEvents();
+      setEvents(data);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      toast.error("Failed to load events");
+    } finally {
+      setLoading((prev) => ({ ...prev, events: false }));
+    }
+  };
+
+  // API Operations - RSOs
+  const handleRsoCreate = async (formData: RsoRequest) => {
+    try {
+      const newRso = await rsoApi.createRso(formData);
+      setRsos([...rsos, newRso]);
+      toast.success("RSO created successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to create RSO");
+      return false;
+    }
+  };
+
+  const handleRsoUpdate = async (id: number, formData: RsoRequest) => {
+    try {
+      const updatedRso = await rsoApi.updateRso(id, formData);
+      setRsos(rsos.map((rso) => (rso.id === id ? updatedRso : rso)));
+      toast.success("RSO updated successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to update RSO");
+      return false;
+    }
+  };
+
+  const handleRsoDelete = async (id: number) => {
+    try {
+      await rsoApi.deleteRso(id);
+      setRsos(rsos.filter((rso) => rso.id !== id));
+      toast.success("RSO deleted successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to delete RSO");
+      return false;
+    }
+  };
+
+  // API Operations - Events
+  const handleEventCreate = async (formData: EventCreateRequest) => {
+    try {
+      let newEvent;
+      if (formData.eventType === "RSO" && formData.rsoId) {
+        newEvent = await eventApi.createRsoEvent(formData.rsoId, formData);
+      } else {
+        newEvent = await eventApi.createEvent(formData);
+      }
+      setEvents([...events, newEvent]);
+      toast.success("Event created successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to create event");
+      return false;
+    }
+  };
+
+  const handleEventUpdate = async (
+    id: number,
+    formData: EventUpdateRequest
+  ) => {
+    try {
+      const updatedEvent = await eventApi.updateEvent(id, formData);
+      setEvents(
+        events.map((event) => (event.id === id ? updatedEvent : event))
+      );
+      toast.success("Event updated successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to update event");
+      return false;
+    }
+  };
+
+  const handleEventDelete = async (id: number) => {
+    try {
+      await eventApi.deleteEvent(id);
+      setEvents(events.filter((event) => event.id !== id));
+      toast.success("Event deleted successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to delete event");
+      return false;
+    }
+  };
+
+  // Tab navigation
+  const tabs = [
+    { id: "events", label: "Events" },
+    { id: "rsos", label: "Student Organizations (RSOs)" },
   ];
 
   return (
@@ -48,204 +148,47 @@ const AdminDashboard = () => {
           Manage your RSOs and events
         </p>
 
-        {/* Dashboard Tabs */}
-        <div className="mt-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+        {/* Tab Navigation */}
+        <div className="mt-6 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => (
               <button
-                onClick={() => setActiveTab("events")}
-                className={`${
-                  activeTab === "events"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
                     ? "border-indigo-500 text-indigo-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                }`}
               >
-                Events
+                {tab.label}
               </button>
-              <button
-                onClick={() => setActiveTab("rsos")}
-                className={`${
-                  activeTab === "rsos"
-                    ? "border-indigo-500 text-indigo-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-              >
-                Student Organizations (RSOs)
-              </button>
-            </nav>
-          </div>
+            ))}
+          </nav>
         </div>
 
-        {/* Events Tab Content */}
+        {/* Tab Content */}
         {activeTab === "events" && (
-          <div className="mt-6">
-            <Card
-              title="Your Events"
-              footer={
-                <div className="flex justify-end">
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Create New Event
-                  </button>
-                </div>
-              }
-            >
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date & Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type / Category
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {events.map((event) => (
-                      <tr key={event.id}>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {event.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {event.description}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            {new Date(event.date).toLocaleDateString()}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {event.time}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {event.location}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {event.type}
-                          </span>
-                          <div className="text-sm text-gray-500 mt-1">
-                            {event.category.replace("_", " ")}
-                            {event.type === "RSO" && event.rsoId && (
-                              <>
-                                {" - "}
-                                {rsos.find((r) => r.id === event.rsoId)?.name ||
-                                  "Unknown RSO"}
-                              </>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right text-sm font-medium">
-                          <button className="text-indigo-600 hover:text-indigo-900 mr-3">
-                            Edit
-                          </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
+          <EventsTab
+            events={events}
+            rsos={rsos}
+            loading={loading.events}
+            userId={user?.id || 1}
+            onCreateEvent={handleEventCreate}
+            onUpdateEvent={handleEventUpdate}
+            onDeleteEvent={handleEventDelete}
+          />
         )}
 
-        {/* RSOs Tab Content */}
         {activeTab === "rsos" && (
-          <div className="mt-6">
-            <Card
-              title="Your Registered Student Organizations"
-              footer={
-                <div className="flex justify-end">
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Create New RSO
-                  </button>
-                </div>
-              }
-            >
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Organization
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Members
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {rsos.map((rso) => (
-                      <tr key={rso.id}>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {rso.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {rso.description}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {rso.memberCount} members
-                          <div>
-                            <button className="text-xs text-indigo-600 hover:text-indigo-900">
-                              View Members
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              rso.status === "ACTIVE"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            {rso.status}
-                          </span>
-                          {rso.memberCount < 5 && (
-                            <div className="mt-1 text-xs text-yellow-600">
-                              Needs {5 - rso.memberCount} more members to
-                              activate
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right text-sm font-medium">
-                          <button className="text-indigo-600 hover:text-indigo-900 mr-3">
-                            Edit
-                          </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
+          <RsosTab
+            rsos={rsos}
+            loading={loading.rsos}
+            userId={user?.id || 1}
+            onCreateRso={handleRsoCreate}
+            onUpdateRso={handleRsoUpdate}
+            onDeleteRso={handleRsoDelete}
+          />
         )}
       </div>
     </div>
