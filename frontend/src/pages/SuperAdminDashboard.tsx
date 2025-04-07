@@ -77,18 +77,20 @@ const SuperAdminDashboard = () => {
   };
 
   const handleFormSubmit = (data: CollegeRequest) => {
-    setFormData(data);
+    console.log("Form submitted with data:", data);
 
+    // Directly pass the data to the respective handler
     if (modalType === ModalType.ADD) {
-      handleAddCollege();
+      handleAddCollege(data);
     } else if (modalType === ModalType.EDIT && selectedCollege) {
-      handleUpdateCollege();
+      handleUpdateCollege(data);
     }
   };
 
-  const handleAddCollege = async () => {
+  const handleAddCollege = async (data: CollegeRequest) => {
     try {
-      const newCollege = await collegeApi.createCollege(formData);
+      console.log("Adding college with data:", data);
+      const newCollege = await collegeApi.createCollege(data);
       setColleges([...colleges, newCollege]);
       resetForm();
       toast.success("College added successfully");
@@ -98,13 +100,13 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  const handleUpdateCollege = async () => {
+  const handleUpdateCollege = async (data: CollegeRequest) => {
     if (!selectedCollege) return;
 
     try {
       const updatedCollege = await collegeApi.updateCollege(
         selectedCollege.id,
-        formData
+        data
       );
       setColleges(
         colleges.map((college) =>
@@ -118,7 +120,7 @@ const SuperAdminDashboard = () => {
       toast.error("Failed to update college");
     }
   };
-
+  
   const handleDeleteCollege = async () => {
     if (!selectedCollege) return;
 
@@ -144,109 +146,6 @@ const SuperAdminDashboard = () => {
         <p className="mt-1 text-sm text-gray-500">
           Manage your colleges and system settings from here.
         </p>
-
-        {/* Super Admin Actions */}
-        <div className="mt-6">
-          <Card title="Super Admin Actions">
-            <div className="divide-y divide-gray-200">
-              <div className="py-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      className="h-6 w-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      System Configuration
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Manage system-wide settings
-                    </p>
-                  </div>
-                </div>
-                <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  Configure
-                </button>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      className="h-6 w-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Admin Management
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Manage administrator accounts
-                    </p>
-                  </div>
-                </div>
-                <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  Manage Admins
-                </button>
-              </div>
-
-              <div className="py-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      className="h-6 w-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Academic Year Setup
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Configure academic years and terms
-                    </p>
-                  </div>
-                </div>
-                <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  Setup
-                </button>
-              </div>
-            </div>
-          </Card>
-        </div>
 
         {/* College List */}
         <div className="mt-6">
