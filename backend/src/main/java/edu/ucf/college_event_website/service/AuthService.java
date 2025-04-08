@@ -3,13 +3,16 @@ package edu.ucf.college_event_website.service;
 import edu.ucf.college_event_website.dto.AuthResponse;
 import edu.ucf.college_event_website.dto.LoginRequest;
 import edu.ucf.college_event_website.dto.SignupRequest;
+import edu.ucf.college_event_website.model.College;
 import edu.ucf.college_event_website.model.User;
+import edu.ucf.college_event_website.repository.CollegeRepository;
 import edu.ucf.college_event_website.repository.UserRepository;
 import edu.ucf.college_event_website.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +27,9 @@ public class AuthService {
     private UserRepository userRepository;
 
     @Autowired
+    private CollegeRepository collegeRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -34,64 +40,57 @@ public class AuthService {
 
     // Registers a new user in the system
     public AuthResponse registerUser(SignupRequest signupRequest) {
-        // Check if the user already exists
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
 
-        // Create new user object
         User user = new User();
         user.setEmail(signupRequest.getEmail());
         user.setFirstName(signupRequest.getFirstName());
         user.setLastName(signupRequest.getLastName());
-        // Encrypt the password before storing
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setRole(signupRequest.getRole());
 
-        // Save user to database
+        // If signup includes a college ID, set it here
+        if (signupRequest.getCollegeId() != null) {
+            College college = collegeRepository.findById(signupRequest.getCollegeId())
+                    .orElseThrow(() -> new RuntimeException("College not found"));
+            user.setCollege(college);
+        }
+
         User savedUser = userRepository.save(user);
 
-        // Create UserDetails object for token generation
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 savedUser.getEmail(),
                 savedUser.getPassword(),
                 java.util.Collections.singletonList(
-                        new org.springframework.security.core.authority.SimpleGrantedAuthority(
-                                "ROLE_" + savedUser.getRole().name()
-                        )
+                        new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name())
                 )
         );
 
-        // Generate JWT token
         String token = jwtUtil.generateToken(userDetails);
 
-        // Return authentication response
-        return new AuthResponse(token, savedUser.getEmail(), savedUser.getId());
+        return new AuthResponse(token, savedUser);
     }
 
     // Authenticates a user and generates a JWT token
     public AuthResponse loginUser(LoginRequest loginRequest) {
-        // Perform authentication using Spring Security
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
                         loginRequest.getPassword()
                 )
         );
-
-        // Set authentication in security context
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Find the user in the database
-        User user = userRepository.findByEmail(loginRequest.getEmail())
+        // ✅ Use the method that fetches college info
+        User user = userRepository.findByEmailWithCollege(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Generate JWT token
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtUtil.generateToken(userDetails);
 
-        // Return authentication response
-        return new AuthResponse(token, user.getEmail(), user.getId());
+        return new AuthResponse(token, user);
     }
 
     // Validates a JWT token
