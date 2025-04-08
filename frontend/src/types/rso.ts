@@ -1,3 +1,5 @@
+import { College } from "./college";
+
 export type RsoStatus = "ACTIVE" | "INACTIVE";
 
 export interface Rso {
@@ -8,7 +10,7 @@ export interface Rso {
   status: RsoStatus;
   adminId: number;
   collegeId: number;
-  college?: string;
+  college?: College;
 }
 
 export interface RsoRequest {

@@ -1,245 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { Rso, RsoRequest } from "../types/rso";
-import { College } from "../types/college";
-import { rsoApi } from "../api/rso";
-import { collegeApi } from "../api/college";
+import React from "react";
+import { useRsos } from "../hooks/useRsos";
 import Card from "../components/Card";
 import Modal from "../components/Modal";
-import toast from "react-hot-toast";
+import RsoForm from "../components/rso/RsoForm";
 
 const Rsos: React.FC = () => {
-  // State for RSOs and loading status
-  const [rsos, setRsos] = useState<Rso[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const {
+    rsos,
+    loading,
+    colleges,
+    loadingColleges,
+    modal,
+    formData,
+    openModal,
+    closeModal,
+    handleInputChange,
+    handleSubmit,
+    safeRender,
+  } = useRsos();
 
-  // State for colleges
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [loadingColleges, setLoadingColleges] = useState<boolean>(false);
-
-  // Modal state
-  const [modal, setModal] = useState<{
-    show: boolean;
-    type: "add" | "edit" | "delete" | "members";
-    rso: Rso | null;
-    members?: any[];
-  }>({
-    show: false,
-    type: "add",
-    rso: null,
-  });
-
-  // Form data state
-  const [formData, setFormData] = useState<RsoRequest>({
-    name: "",
-    description: "",
-    college: {
-      id: 0,
-    },
-  });
-
-  // Fetch RSOs and colleges on component mount
-  useEffect(() => {
-    fetchRsos();
-    fetchColleges();
-  }, []);
-
-  // Fetch RSOs from API
-  const fetchRsos = async () => {
-    setLoading(true);
-    try {
-      const data = await rsoApi.getMyRsos();
-      // Process the data to ensure all fields are properly formatted
-      const processedData = data.map((rso) => ({
-        ...rso,
-        // Convert any potential object fields to strings to prevent rendering errors
-        collegeName: typeof rso.college === "object",
-      }));
-      setRsos(processedData);
-      console.log("Processed RSO data:", processedData);
-    } catch (error) {
-      console.error("Error fetching RSOs:", error);
-      toast.error("Failed to load RSOs");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch colleges from API
-  const fetchColleges = async () => {
-    setLoadingColleges(true);
-    try {
-      const collegeData = await collegeApi.getAllColleges();
-      setColleges(collegeData);
-
-      // If no college is selected and we have colleges, select the first one
-      if (!formData.college.id && collegeData.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          college: {
-            id: collegeData[0].id,
-          },
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching colleges:", error);
-      toast.error("Failed to load colleges");
-    } finally {
-      setLoadingColleges(false);
-    }
-  };
-
-  // Modal handlers
-  const openModal = (
-    type: "add" | "edit" | "delete" | "members",
-    rso?: Rso
-  ) => {
-    if (type === "add") {
-      // Use the first college ID if available, or keep the current one
-      const collegeId =
-        colleges.length > 0 ? colleges[0].id : formData.college.id;
-
-      setFormData({
-        name: "",
-        description: "",
-        college: {
-          id: collegeId,
-        },
-      });
-    } else if (type === "edit" && rso) {
-      setFormData({
-        name: rso.name,
-        description: rso.description,
-        college: {
-          id: rso.collegeId,
-        },
-      });
-    } else if (type === "members" && rso) {
-      handleViewMembers(rso.id);
-    }
-
-    setModal({
-      show: true,
-      type,
-      rso: rso || null,
-    });
-  };
-
-  const closeModal = () => {
-    setModal({ ...modal, show: false });
-  };
-
-  // Form input handlers
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-
-    // Handle college.id specifically to ensure it's a number
-    if (name === "collegeId") {
-      setFormData({
-        ...formData,
-        college: {
-          id: parseInt(value),
-        },
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
-  };
-
-  // API handlers
-  const handleCreateRso = async (): Promise<boolean> => {
-    try {
-      console.log("Creating RSO with data:", formData);
-      const newRso = await rsoApi.createRso(formData);
-      setRsos([...rsos, newRso]);
-      toast.success("RSO created successfully");
-      return true;
-    } catch (error) {
-      console.error("Error creating RSO:", error);
-      toast.error("Failed to create RSO");
-      return false;
-    }
-  };
-
-  const handleUpdateRso = async (): Promise<boolean> => {
-    if (!modal.rso) return false;
-
-    try {
-      console.log("Updating RSO with data:", formData);
-      const updatedRso = await rsoApi.updateRso(modal.rso.id, formData);
-      setRsos(rsos.map((rso) => (rso.id === modal.rso?.id ? updatedRso : rso)));
-      toast.success("RSO updated successfully");
-      return true;
-    } catch (error) {
-      console.error("Error updating RSO:", error);
-      toast.error("Failed to update RSO");
-      return false;
-    }
-  };
-
-  const handleDeleteRso = async (): Promise<boolean> => {
-    if (!modal.rso) return false;
-
-    try {
-      await rsoApi.deleteRso(modal.rso.id);
-      setRsos(rsos.filter((rso) => rso.id !== modal.rso?.id));
-      toast.success("RSO deleted successfully");
-      return true;
-    } catch (error) {
-      console.error("Error deleting RSO:", error);
-      toast.error("Failed to delete RSO");
-      return false;
-    }
-  };
-
-  const handleViewMembers = async (rsoId: number) => {
-    try {
-      const members = await rsoApi.getRsoMembers(rsoId);
-      setModal((prev) => ({
-        ...prev,
-        members: members,
-      }));
-      return true;
-    } catch (error) {
-      console.error("Error loading members:", error);
-      toast.error("Failed to load members");
-      return false;
-    }
-  };
-
-  // Submit handler
-  const handleSubmit = async () => {
-    let success = false;
-
-    // Add a validation check to ensure college ID is valid
-    if (
-      modal.type !== "delete" &&
-      !colleges.some((c) => c.id === formData.college.id)
-    ) {
-      toast.error("Please select a valid college");
-      return;
-    }
-
-    if (modal.type === "add") {
-      success = await handleCreateRso();
-    } else if (modal.type === "edit") {
-      success = await handleUpdateRso();
-    } else if (modal.type === "delete") {
-      success = await handleDeleteRso();
-    }
-
-    if (success) {
-      closeModal();
-    }
-  };
-
-  // Content Rendering
+  // Render the RSO table or loading/empty states
   const renderContent = () => {
     if (loading) {
       return (
@@ -291,7 +71,9 @@ const Rsos: React.FC = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
-                  {safeRender(rso.college)}
+                  {typeof rso.college === "object" && rso.college?.name
+                    ? rso.college.name
+                    : safeRender(rso.college)}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   {safeRender(rso.memberCount)} members
@@ -343,17 +125,6 @@ const Rsos: React.FC = () => {
     );
   };
 
-  // Helper function to safely render any value (prevents rendering objects directly)
-  const safeRender = (value: any): string => {
-    if (value === null || value === undefined) {
-      return "N/A";
-    }
-    if (typeof value === "object") {
-      return JSON.stringify(value);
-    }
-    return String(value);
-  };
-
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -393,81 +164,12 @@ const Rsos: React.FC = () => {
         onConfirm={handleSubmit}
         confirmText={modal.type === "add" ? "Create RSO" : "Update RSO"}
       >
-        <div className="p-4">
-          <form className="space-y-4">
-            {/* College Selection */}
-            <div>
-              <label
-                htmlFor="collegeId"
-                className="block text-sm font-medium text-gray-700"
-              >
-                College
-              </label>
-              {loadingColleges ? (
-                <div className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm">
-                  Loading colleges...
-                </div>
-              ) : colleges.length === 0 ? (
-                <div className="mt-1 block w-full py-2 px-3 border border-red-300 bg-red-50 rounded-md shadow-sm text-red-500">
-                  No colleges available. Please create a college first.
-                </div>
-              ) : (
-                <select
-                  name="collegeId"
-                  id="collegeId"
-                  value={formData.college.id || ""}
-                  onChange={handleInputChange}
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                >
-                  <option value="">Select a college</option>
-                  {colleges.map((college) => (
-                    <option key={college.id} value={college.id}>
-                      {college.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            {/* RSO Name */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                RSO Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Description
-              </label>
-              <textarea
-                name="description"
-                id="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={3}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-          </form>
-        </div>
+        <RsoForm
+          formData={formData}
+          colleges={colleges}
+          loadingColleges={loadingColleges}
+          onChange={handleInputChange}
+        />
       </Modal>
 
       {/* Delete RSO Confirmation Modal */}
