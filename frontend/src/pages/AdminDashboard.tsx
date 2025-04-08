@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuthStore";
 import { useNavigate } from "react-router-dom";
+import Card from "../components/Card";
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
@@ -57,30 +58,6 @@ const AdminDashboard = () => {
             </div>
           </Card>
         </div>
-
-        {/* Tab Content */}
-        {activeTab === "events" && (
-          <EventsTab
-            events={events}
-            rsos={rsos}
-            loading={loading.events}
-            userId={user?.id || 1}
-            onCreateEvent={handleEventCreate}
-            onUpdateEvent={handleEventUpdate}
-            onDeleteEvent={handleEventDelete}
-          />
-        )}
-
-        {activeTab === "rsos" && (
-          <RsosTab
-            rsos={rsos}
-            loading={loading.rsos}
-            userId={user?.id || 1}
-            onCreateRso={handleRsoCreate}
-            onUpdateRso={handleRsoUpdate}
-            onDeleteRso={handleRsoDelete}
-          />
-        )}
       </div>
     </div>
   );

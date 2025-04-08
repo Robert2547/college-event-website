@@ -3,10 +3,11 @@ import React, { ReactNode } from "react";
 interface CardProps {
   title?: string;
   children: ReactNode;
+  footer?: ReactNode;
   className?: string;
 }
 
-const Card = ({ title, children, className = "" }: CardProps) => {
+const Card = ({ title, children, footer, className = "" }: CardProps) => {
   return (
     <div
       className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}
@@ -19,6 +20,11 @@ const Card = ({ title, children, className = "" }: CardProps) => {
         </div>
       )}
       <div className="px-4 py-5 sm:p-6">{children}</div>
+      {footer && (
+        <div className="px-4 py-4 sm:px-6 bg-gray-50 border-t border-gray-200">
+          {footer}
+        </div>
+      )}
     </div>
   );
 };

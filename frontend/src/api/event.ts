@@ -2,6 +2,22 @@ import { Event, EventCreateRequest, EventUpdateRequest } from "../types/event";
 import { authAxios } from "./auth";
 
 export const eventApi = {
+  // Get private events
+  getPrivateEvents: async () => {
+    const res = await authAxios.get("/api/events/filter/type/PRIVATE");
+    return res.data;
+  },
+
+  // Get RSO events
+  getRsoEvents: async (rsoId: number) => {
+    const res = await authAxios.get(`/api/rsos/${rsoId}/events`);
+    return res.data;
+  },
+  // Get public events
+  getPublicEvents: async () => {
+    const res = await authAxios.get("/api/events/filter/type/PUBLIC");
+    return res.data;
+  },
   // Get all events accessible to the current user
   getAllEvents: async (): Promise<Event[]> => {
     try {
