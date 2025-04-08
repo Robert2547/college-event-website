@@ -1,27 +1,51 @@
+import { Location } from "./location";
+
+export type EventType = "PUBLIC" | "PRIVATE" | "RSO";
+
 export interface Event {
-  eventId?: number;
+  id: number;
   name: string;
-  description?: string;
-  date: string;
+  description: string;
   time: string;
-  eventType: "PUBLIC" | "PRIVATE" | "RSO";
-  locationId: number;
-  contactPhone?: string;
-  contactEmail?: string;
-  createdBy: number;
-  collegeId: number;
+  date: string;
+  location: Location;
+  createdBy: string;
+  college: string;
+  eventType: EventType;
+  contactPhone: string;
+  contactEmail: string;
+  averageRating?: number;
+  commentCount?: number;
+  approved?: boolean; // For public events
+  rsoId?: number; // For RSO events
 }
 
-
-export interface EventCreateRequest {
+export interface EventUpdateRequest {
   name: string;
-  description?: string;
+  description: string;
+  time: string;
+  date: string;
+  locationId: number;
+  contactPhone: string;
+  contactEmail: string;
+}
+
+export interface EventCreateRequest extends EventUpdateRequest {
+  collegeId: number;
+  eventType: EventType;
+  rsoId?: number;
+}
+
+export interface EventComment {
+  id: number;
+  content: string;
   date: string;
   time: string;
-  eventType: "PUBLIC" | "PRIVATE" | "RSO";
-  locationId: number;
-  contactEmail?: string;
-  contactPhone?: string;
-  rsoId?: number | null;
-  collegeId: number;
+  userName: string;
+}
+
+export interface EventRating {
+  eventId: number;
+  averageRating: number;
+  totalRatings: number;
 }

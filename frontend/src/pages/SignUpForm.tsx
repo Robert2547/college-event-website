@@ -23,7 +23,7 @@ const SignUpForm = () => {
     passwordConfirmation: "",
     firstName: "",
     lastName: "",
-    role: "USER",
+    role: "STUDENT",
   });
 
   // Form validation errors
@@ -233,7 +233,7 @@ const SignUpForm = () => {
                 className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                 required
               >
-                <option value="USER">USER</option>
+                <option value="STUDENT">STUDENT</option>
                 <option value="ADMIN">ADMIN</option>
                 <option value="SUPER_ADMIN">SUPER_ADMIN</option>
               </select>

@@ -1,5 +1,4 @@
-import React from "react";
-import Card from "../components/Card";
+import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../hooks/useAuthStore";
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +12,9 @@ const AdminDashboard = () => {
         <h1 className="text-2xl font-semibold text-gray-900">
           Admin Dashboard
         </h1>
-        <p className="mt-1 text-sm text-gray-500">Manage users and courses</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Manage your RSOs and events
+        </p>
 
         {/* Admin Actions */}
         <div className="mt-6">
@@ -56,6 +57,30 @@ const AdminDashboard = () => {
             </div>
           </Card>
         </div>
+
+        {/* Tab Content */}
+        {activeTab === "events" && (
+          <EventsTab
+            events={events}
+            rsos={rsos}
+            loading={loading.events}
+            userId={user?.id || 1}
+            onCreateEvent={handleEventCreate}
+            onUpdateEvent={handleEventUpdate}
+            onDeleteEvent={handleEventDelete}
+          />
+        )}
+
+        {activeTab === "rsos" && (
+          <RsosTab
+            rsos={rsos}
+            loading={loading.rsos}
+            userId={user?.id || 1}
+            onCreateRso={handleRsoCreate}
+            onUpdateRso={handleRsoUpdate}
+            onDeleteRso={handleRsoDelete}
+          />
+        )}
       </div>
     </div>
   );
