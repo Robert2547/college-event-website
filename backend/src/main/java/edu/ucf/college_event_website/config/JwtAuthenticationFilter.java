@@ -14,8 +14,15 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import io.jsonwebtoken.Claims;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 import java.io.IOException;
+
 
 /**
  * Filter that intercepts every request to validate JWT token
@@ -51,9 +58,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Validate token
                     if (jwtUtil.validateToken(jwt, userDetails)) {
                         // Create authentication object
+                        Claims claims = jwtUtil.extractAllClaims(jwt);
+                        List<String> roles = claims.get("roles", List.class);
+
+                        List<GrantedAuthority> authorities = roles.stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role)) // ✅ Spring requires "ROLE_" prefix
+                                .collect(Collectors.toList());
+
+
                         UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities());
+                                new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
                         // Add request details to authentication
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -10,4 +10,5 @@ public class SignupRequest {
     private String lastName;
     private String password;
     private Role role;
+    private Long collegeId;
 }

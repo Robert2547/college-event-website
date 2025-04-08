@@ -1,4 +1,4 @@
-import axios from "axios";
+import { authAxios } from "./auth";
 
 export interface LocationCreateRequest {
   name: string;
@@ -8,6 +8,6 @@ export interface LocationCreateRequest {
 }
 
 export const createLocation = async (location: LocationCreateRequest) => {
-  const res = await axios.post("/api/locations", location);
-  return res.data; // will include locationId
+  const res = await authAxios.post("/api/admin/locations", location);
+  return res.data;
 };

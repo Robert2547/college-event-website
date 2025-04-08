@@ -6,6 +6,12 @@ import { EventCreateRequest } from '../types/event';
 import MapPicker, { SelectedLocation } from '../components/MapPicker';
 
 const CreateEventForm: React.FC = () => {
+
+  const stored = localStorage.getItem('auth-storage');
+  const user = stored ? JSON.parse(stored)?.state?.user : null;
+
+  const collegeId = user?.college?.id;
+
   const initialFormData: EventCreateRequest = {
     name: '',
     description: '',
@@ -16,6 +22,7 @@ const CreateEventForm: React.FC = () => {
     contactEmail: '',
     contactPhone: '',
     rsoId: null,
+    collegeId: collegeId || 1, // fallback if needed
   };
 
   const [formData, setFormData] = useState<EventCreateRequest>(initialFormData);

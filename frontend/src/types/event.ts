@@ -23,4 +23,5 @@ export interface EventCreateRequest {
   contactEmail?: string;
   contactPhone?: string;
   rsoId?: number | null;
+  collegeId: number;
 }
