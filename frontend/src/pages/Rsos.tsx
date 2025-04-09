@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useRsos } from "../hooks/useRsos";
 import Card from "../components/Card";
 import Modal from "../components/Modal";
 import RsoForm from "../components/rso/RsoForm";
+import RsoStatusBadge from "../components/rso/RsoStatusBadge";
+import { validateRsoStatus, getRsoStatus } from "../utils/validateRsoStatus";
 
 const Rsos: React.FC = () => {
   const {
@@ -60,65 +62,74 @@ const Rsos: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {rsos.map((rso) => (
-              <tr key={rso.id}>
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">
-                    {safeRender(rso.name)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {safeRender(rso.description)}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {typeof rso.college === "object" && rso.college?.name
-                    ? rso.college.name
-                    : safeRender(rso.college)}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {safeRender(rso.memberCount)} members
-                  <div>
-                    <button
-                      onClick={() => openModal("members", rso)}
-                      className="text-xs text-indigo-600 hover:text-indigo-900"
-                    >
-                      View Members
-                    </button>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      safeRender(rso.status) === "ACTIVE"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {safeRender(rso.status)}
-                  </span>
-                  {typeof rso.memberCount === "number" &&
-                    rso.memberCount < 5 && (
+            {rsos.map((rso) => {
+              // Get the stored status from localStorage
+              const storedStatus = getRsoStatus(rso.id);
+
+              return (
+                <tr key={rso.id}>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {safeRender(rso.name)}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {safeRender(rso.description)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {typeof rso.college === "object" && rso.college?.name
+                      ? rso.college.name
+                      : safeRender(rso.college)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {safeRender(rso.memberCount)} members
+                    <div>
+                      <button
+                        onClick={() => openModal("members", rso)}
+                        className="text-xs text-indigo-600 hover:text-indigo-900"
+                      >
+                        View Members
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {/* Show status based on localStorage */}
+                    {modal.members && modal.rso?.id === rso.id ? (
+                      <RsoStatusBadge members={modal.members} rsoId={rso.id} />
+                    ) : (
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          storedStatus === "ACTIVE"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {storedStatus}
+                      </span>
+                    )}
+                    {storedStatus !== "ACTIVE" && (
                       <div className="mt-1 text-xs text-yellow-600">
-                        Needs {5 - rso.memberCount} more members to activate
+                        View members to see activation requirements
                       </div>
                     )}
-                </td>
-                <td className="px-6 py-4 text-right text-sm font-medium">
-                  <button
-                    onClick={() => openModal("edit", rso)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => openModal("delete", rso)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-medium">
+                    <button
+                      onClick={() => openModal("edit", rso)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => openModal("delete", rso)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -206,38 +217,77 @@ const Rsos: React.FC = () => {
               <p className="text-gray-500">No members found for this RSO.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Joined
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {modal.members.map((member) => (
-                    <tr key={member.id}>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {member.firstName} {member.lastName}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {member.email}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(member.joinedAt).toLocaleDateString()}
-                      </td>
+            <>
+              {/* Status Information Box */}
+              <div className="mb-4 p-4 rounded-md bg-gray-50 border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  Status Requirements
+                </h3>
+
+                {/* Use RsoStatusBadge to show detailed status */}
+                {modal.rso && (
+                  <RsoStatusBadge
+                    members={modal.members}
+                    rsoId={modal.rso.id}
+                  />
+                )}
+
+                {/* Domain Statistics */}
+                <div className="mt-3 text-xs text-gray-500">
+                  <p className="mb-1">Email Domains:</p>
+                  <ul className="list-disc list-inside pl-2">
+                    {(() => {
+                      // Get domain counts
+                      const domainCounts: Record<string, number> = {};
+                      modal.members.forEach((member) => {
+                        if (!member.email) return;
+                        const parts = member.email.split("@");
+                        if (parts.length !== 2) return;
+                        const domain = parts[1].toLowerCase();
+                        domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+                      });
+
+                      // Return list items
+                      return Object.entries(domainCounts).map(
+                        ([domain, count]) => (
+                          <li key={domain}>
+                            @{domain}: {count} member{count !== 1 ? "s" : ""}
+                          </li>
+                        )
+                      );
+                    })()}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Member Table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {modal.members.map((member) => (
+                      <tr key={member.id}>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {member.firstName} {member.lastName}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {member.email}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </Modal>
