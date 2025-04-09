@@ -5,6 +5,7 @@ import { SignUpCredentials, Role } from "../types/auth";
 import { authApi } from "../api/auth";
 import { useAuthStore } from "../hooks/useAuthStore";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { useColleges } from "../hooks/useDataFetching";
 import {
   useTogglePasswordVisibility,
   validateEmail,
@@ -12,10 +13,12 @@ import {
   validatePasswordMatch,
   validateRequired,
 } from "../utils/formValidate";
+import { College } from "../types/college";
 
 const SignUpForm = () => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const { colleges, loading: collegesLoading } = useColleges();
 
   const [formData, setFormData] = useState<SignUpCredentials>({
     email: "",
@@ -24,6 +27,7 @@ const SignUpForm = () => {
     firstName: "",
     lastName: "",
     role: "STUDENT",
+    collegeId: undefined,
   });
 
   // Form validation errors
@@ -47,13 +51,18 @@ const SignUpForm = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    if (name === "collegeId") {
+      setFormData((prev) => ({
+        ...prev,
+        collegeId: value ? parseInt(value, 10) : undefined,
+      }));
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
 
     // Clear error for this field
-    setErrors({
-      ...errors,
-      [name]: "",
-    });
+    setErrors({ ...errors, [name]: "" });
   };
 
   // Validate form
@@ -238,6 +247,46 @@ const SignUpForm = () => {
                 <option value="SUPER_ADMIN">SUPER_ADMIN</option>
               </select>
             </div>
+
+            {/* College selection (only for STUDENT role) */}
+            {
+              <div>
+                <label
+                  htmlFor="collegeId"
+                  className="block text-sm font-medium text-gray-700 mb-1 text-left"
+                >
+                  College
+                </label>
+
+                {collegesLoading ? (
+                  <div className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm">
+                    Loading colleges...
+                  </div>
+                ) : colleges.length === 0 ? (
+                  <div className="mt-1 block w-full py-2 px-3 border border-red-300 bg-red-50 rounded-md shadow-sm text-red-500">
+                    No colleges available.
+                  </div>
+                ) : (
+                  <select
+                    id="collegeId"
+                    name="collegeId"
+                    value={formData.collegeId ?? ""}
+                    onChange={handleChange}
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="" disabled>
+                      Select your college
+                    </option>
+                    {colleges.map((c: College) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            }
 
             {/* Password */}
             <div>
