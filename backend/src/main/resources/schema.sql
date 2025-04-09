@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `college_event_website`.`users` (
   `last_name` VARCHAR(255) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
   `role` ENUM('ADMIN', 'SUPER_ADMIN', 'STUDENT') NOT NULL DEFAULT 'STUDENT',
-  `college_id` BIGINT NOT NULL,
+  `college_id` BIGINT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE INDEX `UK6dotkott2kjsp8vw4d0m25fb7` (`email` ASC) VISIBLE,
   UNIQUE INDEX `idx_users_email` (`email` ASC) VISIBLE,

@@ -83,9 +83,15 @@ public class AuthService {
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // ✅ Use the method that fetches college info
+        // First try to get the user with college info
         User user = userRepository.findByEmailWithCollege(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElse(null);
+
+        // If that doesn't work, fall back to the regular findByEmail
+        if (user == null) {
+            user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtUtil.generateToken(userDetails);
