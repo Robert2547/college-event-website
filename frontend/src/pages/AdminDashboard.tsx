@@ -24,20 +24,7 @@ const AdminDashboard = () => {
               <div className="py-3 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      className="h-6 w-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
+                    <img src="/manage.svg" alt="Manage" className="h-6 w-6" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-gray-900">
@@ -60,20 +47,7 @@ const AdminDashboard = () => {
               <div className="py-3 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10 rounded-md bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      className="h-6 w-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
+                    <img src="/manage.svg" alt="Manage" className="h-6 w-6" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-gray-900">
