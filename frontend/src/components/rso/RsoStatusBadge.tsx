@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { validateRsoStatus, getRsoStatus } from "../../utils/validateRsoStatus";
+import {
+  validateRsoStatus,
+  getRsoStatus,
+  setRsoStatus,
+} from "../../utils/validateRsoStatus";
 
 interface RsoStatusBadgeProps {
   members: any[];
@@ -8,17 +12,20 @@ interface RsoStatusBadgeProps {
 
 const RsoStatusBadge: React.FC<RsoStatusBadgeProps> = ({ members, rsoId }) => {
   const [status, setStatus] = useState<string>(getRsoStatus(rsoId));
+  const [validation, setValidation] = useState(
+    validateRsoStatus(members, rsoId)
+  );
 
-  // Run validation and update status when members change
   useEffect(() => {
-    if (members && members.length > 0) {
-      const validation = validateRsoStatus(members, rsoId);
-      setStatus(validation.isValid ? "ACTIVE" : "INACTIVE");
+    if (members && Array.isArray(members)) {
+      const newValidation = validateRsoStatus(members, rsoId);
+      setValidation(newValidation);
+      setStatus(newValidation.isValid ? "ACTIVE" : "INACTIVE");
+
+      setRsoStatus(rsoId, newValidation.isValid ? "ACTIVE" : "INACTIVE");
     }
   }, [members, rsoId]);
 
-  // Get validation details for display
-  const validation = validateRsoStatus(members, rsoId);
   const isActive = validation.isValid;
 
   return (

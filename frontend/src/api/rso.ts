@@ -78,36 +78,6 @@ export const rsoApi = {
     }
   },
 
-  // Join RSO
-  joinRso: async (id: number): Promise<void> => {
-    try {
-      await authAxios.post(`/api/rsos/${id}/join`);
-    } catch (error) {
-      console.error("Join RSO error:", error);
-      throw error;
-    }
-  },
-
-  // Leave RSO
-  leaveRso: async (id: number): Promise<void> => {
-    try {
-      await authAxios.delete(`/api/rsos/${id}/leave`);
-    } catch (error) {
-      console.error("Leave RSO error:", error);
-      throw error;
-    }
-  },
-
-  // Get RSO events
-  getRsoEvents: async (id: number): Promise<any[]> => {
-    try {
-      const response = await authAxios.get(`/api/rsos/${id}/events`);
-      return response.data;
-    } catch (error) {
-      console.error("Get RSO events error:", error);
-      throw error;
-    }
-  },
   // Add a member to RSO (admin function)
   addMemberToRso: async (rsoId: number, userId: number): Promise<void> => {
     try {
@@ -124,6 +94,37 @@ export const rsoApi = {
       await authAxios.delete(`/api/admin/rsos/${rsoId}/members/${userId}`);
     } catch (error) {
       console.error("Remove member from RSO error:", error);
+      throw error;
+    }
+  },
+
+  // Join RSO (for current user)
+  joinRso: async (id: number): Promise<void> => {
+    try {
+      await authAxios.post(`/api/rsos/${id}/join`);
+    } catch (error) {
+      console.error("Join RSO error:", error);
+      throw error;
+    }
+  },
+
+  // Leave RSO (for current user)
+  leaveRso: async (id: number): Promise<void> => {
+    try {
+      await authAxios.delete(`/api/rsos/${id}/leave`);
+    } catch (error) {
+      console.error("Leave RSO error:", error);
+      throw error;
+    }
+  },
+
+  // Get RSO events
+  getRsoEvents: async (id: number): Promise<any[]> => {
+    try {
+      const response = await authAxios.get(`/api/rsos/${id}/events`);
+      return response.data;
+    } catch (error) {
+      console.error("Get RSO events error:", error);
       throw error;
     }
   },

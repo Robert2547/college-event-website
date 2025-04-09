@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { userApi } from "../../api/user";
 import { rsoApi } from "../../api/rso";
 import { User } from "../../types/user";
@@ -23,7 +23,8 @@ const AddRsoMember: React.FC<AddRsoMemberProps> = ({
   // Check if user is already a member
   const isAlreadyMember = (userId: number): boolean => {
     return currentMembers.some(
-      (membership) => membership.user && membership.user.id === userId
+      (member) =>
+        member.id === userId || (member.user && member.user.id === userId)
     );
   };
 
@@ -84,20 +85,27 @@ const AddRsoMember: React.FC<AddRsoMemberProps> = ({
   };
 
   return (
-    <div className="mt-6 pt-4 border-t border-gray-200">
-      <h4 className="text-lg font-medium text-gray-800 mb-3">Add Members</h4>
-
-      <div className="flex space-x-2">
+    <div className="mt-6 pt-6 border-t border-gray-200">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        Add New Members
+      </h3>
+      <div className="flex items-end space-x-2">
         <div className="flex-grow">
+          <label
+            htmlFor="email-search"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Search by Email
+          </label>
           <input
+            id="email-search"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter email address"
-            className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            placeholder="Enter user email address"
+            className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             disabled={loading}
           />
-          {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
         </div>
         <button
           onClick={handleSearch}
@@ -108,53 +116,63 @@ const AddRsoMember: React.FC<AddRsoMemberProps> = ({
               : "bg-indigo-600 text-white hover:bg-indigo-700"
           }`}
         >
-          {loading ? "Searching..." : "Search"}
+          {loading ? "Searching..." : "Search User"}
         </button>
       </div>
 
-      {/* Search Results */}
-      {results && results.length > 0 && (
-        <div className="mt-3 border rounded-md overflow-hidden">
-          <div>
-            {results.map((user) => {
-              const alreadyMember = isAlreadyMember(user.id);
-
-              return (
-                <div
-                  key={user.id}
-                  className="p-3 border-b last:border-b-0 flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-medium text-sm">
-                      {user.firstName} {user.lastName}
-                    </p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={() => handleAddMember(user.id)}
-                    disabled={alreadyMember}
-                    className={`px-3 py-1 rounded-md text-sm ${
-                      alreadyMember
-                        ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                        : "bg-green-100 text-green-800 hover:bg-green-200"
-                    }`}
-                  >
-                    {alreadyMember ? "Already Member" : "Add to RSO"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+      {error && (
+        <div className="mt-2 p-2 bg-red-50 text-red-500 text-sm rounded-md">
+          {error}
         </div>
       )}
 
-      <div className="mt-3">
-        <p className="text-xs text-gray-500">
-          <strong>Note:</strong> RSOs require at least 5 members to be active,
-          with at least 4 members sharing the same email domain (e.g.,
-          @ucf.edu).
-        </p>
-      </div>
+      {/* Search Results */}
+      {results !== null && (
+        <div className="mt-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
+            Search Results
+          </h4>
+
+          {results.length === 0 ? (
+            <div className="bg-gray-50 p-4 rounded-md text-center text-gray-500">
+              No users found matching that email.
+            </div>
+          ) : (
+            <div className="bg-white border rounded-md overflow-hidden">
+              {results.map((user) => {
+                const alreadyMember = isAlreadyMember(user.id);
+
+                return (
+                  <div
+                    key={user.id}
+                    className="p-4 border-b last:border-b-0 flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => handleAddMember(user.id)}
+                      disabled={alreadyMember || loading}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        alreadyMember
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                          : loading
+                          ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                          : "bg-green-100 text-green-800 hover:bg-green-200"
+                      }`}
+                    >
+                      {alreadyMember ? "Already Member" : "Add to RSO"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

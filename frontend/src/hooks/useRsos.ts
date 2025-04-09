@@ -73,7 +73,7 @@ export const useRsos = () => {
   };
 
   // Modal handlers
-  const openModal = (
+  const openModal = async (
     type: "add" | "edit" | "delete" | "members",
     rso?: Rso
   ) => {
@@ -93,7 +93,7 @@ export const useRsos = () => {
       });
     } else if (type === "members" && rso) {
       // Load members
-      handleViewMembers(rso.id);
+      await handleViewMembers(rso.id);
     }
 
     setModal({
@@ -222,19 +222,19 @@ export const useRsos = () => {
   };
 
   return {
-    // State
     rsos,
     loading,
     colleges,
     loadingColleges,
     modal,
     formData,
+    setModal,
 
-    // Functions
     openModal,
     closeModal,
     handleInputChange,
     handleSubmit,
     safeRender,
+    handleViewMembers,
   };
 };
