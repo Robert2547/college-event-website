@@ -1,9 +1,8 @@
 import React from "react";
 import "./App.css";
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-defaulticon-compatibility';
-import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
-
+import "leaflet/dist/leaflet.css";
+import "leaflet-defaulticon-compatibility";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 
 import {
   BrowserRouter as Router,
@@ -16,41 +15,42 @@ import LoginForm from "./pages/LoginForm";
 import SignUpForm from "./pages/SignUpForm";
 import { useAuthStore } from "./hooks/useAuthStore";
 import ProtectedRoute from "./routes/ProtectedRoutes";
-import PublicEvents from './pages/PublicEvents';
-import PrivateEvents from './pages/PrivateEvents';
-import RsoEvents from './pages/RsoEvents';
+import PublicEvents from "./pages/PublicEvents";
+import PrivateEvents from "./pages/PrivateEvents";
+import RsoEvents from "./pages/RsoEvents";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Unauthorized from "./pages/Unathorized";
 import Layout from "./components/Layout";
 import CreateEventForm from "./pages/CreateEventForm";
+import Rsos from "./pages/Rsos";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
 
   return (
     <Router>
-      <div className='App'>
-        <Toaster position='top-center' />
+      <div className="App">
+        <Toaster position="top-center" />
         <Routes>
           {/* Public routes */}
           <Route
-            path='/login'
+            path="/login"
             element={
-              isAuthenticated ? <Navigate to='/dashboard' /> : <LoginForm />
+              isAuthenticated ? <Navigate to="/dashboard" /> : <LoginForm />
             }
           />
           <Route
-            path='/signup'
+            path="/signup"
             element={
-              isAuthenticated ? <Navigate to='/dashboard' /> : <SignUpForm />
+              isAuthenticated ? <Navigate to="/dashboard" /> : <SignUpForm />
             }
           />
 
           {/* Protected routes with Layout */}
           <Route
-            path='/dashboard'
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Layout>
@@ -62,9 +62,9 @@ function App() {
 
           {/* Admin routes example */}
           <Route
-            path='/admin'
+            path="/admin"
             element={
-              <ProtectedRoute requiredRole='ADMIN'>
+              <ProtectedRoute requiredRole="ADMIN">
                 <Layout>
                   <AdminDashboard />
                 </Layout>
@@ -73,9 +73,9 @@ function App() {
           />
 
           <Route
-            path='/admin/create-event'
+            path="/admin/create-event"
             element={
-              <ProtectedRoute requiredRole='ADMIN'>
+              <ProtectedRoute requiredRole="ADMIN">
                 <Layout>
                   <CreateEventForm />
                 </Layout>
@@ -83,11 +83,22 @@ function App() {
             }
           />
 
+          <Route
+            path="/admin/rsos"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <Layout>
+                  <Rsos />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Super Admin routes example */}
           <Route
-            path='/superAdmin'
+            path="/superAdmin"
             element={
-              <ProtectedRoute requiredRole='SUPER_ADMIN'>
+              <ProtectedRoute requiredRole="SUPER_ADMIN">
                 <Layout>
                   <SuperAdminDashboard />
                 </Layout>
@@ -95,10 +106,10 @@ function App() {
             }
           />
 
-          <Route path='/events/public' element={<PublicEvents />} />
+          <Route path="/events/public" element={<PublicEvents />} />
 
           <Route
-            path='/events/private'
+            path="/events/private"
             element={
               <ProtectedRoute>
                 <Layout>
@@ -109,7 +120,7 @@ function App() {
           />
 
           <Route
-            path='/events/rso'
+            path="/events/rso"
             element={
               <ProtectedRoute>
                 <Layout>
@@ -120,7 +131,7 @@ function App() {
           />
           {/* Unauthorized route */}
           <Route
-            path='/unauthorized'
+            path="/unauthorized"
             element={
               <Layout>
                 <Unauthorized />
@@ -129,8 +140,8 @@ function App() {
           />
 
           {/* Default redirect */}
-          <Route path='/' element={<Navigate to='/dashboard' />} />
-          <Route path='*' element={<Navigate to='/dashboard' />} />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </div>
     </Router>

@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode } from "react";
 
 interface CardProps {
   title?: string;
@@ -7,12 +7,16 @@ interface CardProps {
   className?: string;
 }
 
-const Card = ({ title, children, footer, className = '' }: CardProps) => {
+const Card = ({ title, children, footer, className = "" }: CardProps) => {
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}>
+    <div
+      className={`bg-white rounded-lg shadow-md overflow-hidden ${className}`}
+    >
       {title && (
         <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">{title}</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            {title}
+          </h3>
         </div>
       )}
       <div className="px-4 py-5 sm:p-6">{children}</div>

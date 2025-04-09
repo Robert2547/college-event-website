@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getPrivateEvents } from '../api/event';
+import { eventApi } from '../api/event';
 import EventCard from '../components/EventCard';
 import { Event } from '../types/event';
 
@@ -9,7 +9,7 @@ const PrivateEvents: React.FC = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const data = await getPrivateEvents();
+        const data = await eventApi.getPrivateEvents();
         setEvents(data);
       } catch (err) {
         console.error('Failed to fetch private events', err);
@@ -25,7 +25,7 @@ const PrivateEvents: React.FC = () => {
       {events.length === 0 ? (
         <p>No private events found.</p>
       ) : (
-        events.map((event) => <EventCard key={event.eventId} event={event} />)
+        events.map((event) => <EventCard key={event.id} event={event} />)
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getRsoEvents } from '../api/event';
+import { eventApi } from '../api/event';
 import EventCard from '../components/EventCard';
 import { Event } from '../types/event';
 
@@ -10,7 +10,7 @@ const RsoEvents: React.FC = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const data = await getRsoEvents(testRsoId);
+        const data = await eventApi.getRsoEvents(testRsoId);
         setEvents(data);
       } catch (err) {
         console.error('Failed to fetch RSO events', err);
@@ -26,7 +26,7 @@ const RsoEvents: React.FC = () => {
       {events.length === 0 ? (
         <p>No RSO events found.</p>
       ) : (
-        events.map((event) => <EventCard key={event.eventId} event={event} />)
+        events.map((event) => <EventCard key={event.id} event={event} />)
       )}
     </div>
   );

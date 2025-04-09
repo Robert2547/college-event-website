@@ -1,8 +1,12 @@
 package edu.ucf.college_event_website.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,5 +30,6 @@ public class College {
     // Many colleges can be created by one user
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
+    @JsonManagedReference(value = "college-created-by")
     private User createdBy;
 }

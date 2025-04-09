@@ -15,7 +15,7 @@ interface Props {
 
 const MapClickHandler: React.FC<Props> = ({ onSelect }) => {
   useMapEvents({
-    click: async (e) => {
+    click: async (e: any) => {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
 

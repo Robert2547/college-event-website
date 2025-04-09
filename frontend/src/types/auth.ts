@@ -5,7 +5,7 @@ export interface LoginCredentials {
   password: string;
 }
 
-export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";
+export type Role = "STUDENT" | "ADMIN" | "SUPER_ADMIN";
 
 export interface SignUpCredentials extends LoginCredentials {
   firstName: string;
