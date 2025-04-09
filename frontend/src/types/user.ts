@@ -4,4 +4,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  college?: {
+    id: number;
+    name: string;
+  };
 }

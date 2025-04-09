@@ -45,6 +45,7 @@ const AddRsoMember: React.FC<AddRsoMemberProps> = ({
 
     try {
       const searchResults = await userApi.searchByEmail(email);
+      console.log("Search results:", searchResults); // Add log for search results
       setResults(searchResults);
 
       if (searchResults.length === 0) {
@@ -69,12 +70,13 @@ const AddRsoMember: React.FC<AddRsoMemberProps> = ({
 
     setLoading(true);
     try {
+      console.log(`Adding user ID ${userId} to RSO ID ${rsoId}`); // Add log for adding member
       await rsoApi.addMemberToRso(rsoId, userId);
       toast.success("Member added successfully");
       setEmail("");
       setResults(null);
 
-      // Callback to refresh the members list
+      // Call onMemberAdded callback to refresh the members list
       onMemberAdded();
     } catch (err: any) {
       console.error("Error adding member:", err);

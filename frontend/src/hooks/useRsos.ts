@@ -4,9 +4,13 @@ import { College } from "../types/college";
 import { rsoApi } from "../api/rso";
 import { collegeApi } from "../api/college";
 import toast from "react-hot-toast";
+import { useAuthStore } from "./useAuthStore"; // Import useAuthStore
 
 // A single hook to handle all RSO-related state and operations
 export const useRsos = () => {
+  // Get current user from auth store
+  const { user } = useAuthStore();
+
   // RSO state
   const [rsos, setRsos] = useState<Rso[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,33 +79,69 @@ export const useRsos = () => {
   // Modal handlers
   const openModal = async (
     type: "add" | "edit" | "delete" | "members",
-    rso?: Rso
+    rso?: Rso,
+    membersList?: any[]
   ) => {
     if (type === "add") {
-      // Reset form data for new RSO
       setFormData({
         name: "",
         description: "",
-        college: { id: colleges.length > 0 ? colleges[0].id : 0 },
+        college: {
+          id: colleges.length > 0 ? colleges[0].id : 0,
+        },
       });
     } else if (type === "edit" && rso) {
-      // Populate form with RSO data
       setFormData({
         name: rso.name,
         description: rso.description,
-        college: { id: rso.collegeId },
+        college: {
+          id: typeof rso.college === "object" ? rso.college?.id : rso.collegeId,
+        },
       });
-    } else if (type === "members" && rso) {
-      // Load members
-      await handleViewMembers(rso.id);
     }
 
-    setModal({
-      ...modal,
-      show: true,
-      type,
-      rso: rso || null,
-    });
+    // For members view, if members are provided directly use them, otherwise fetch them
+    if (type === "members" && rso) {
+      if (membersList) {
+        // Use the provided members list
+        setModal({
+          show: true,
+          type,
+          rso,
+          members: membersList,
+        });
+      } else {
+        // Fetch members
+        try {
+          const members = await rsoApi.getRsoMembers(rso.id);
+          console.log(`Fetched ${members.length} members for RSO ID ${rso.id}`);
+          console.log("Members: ", members);
+
+          setModal({
+            show: true,
+            type,
+            rso,
+            members,
+          });
+        } catch (error) {
+          console.error("Error fetching RSO members:", error);
+          setModal({
+            show: true,
+            type,
+            rso: rso ?? null,
+            members: [],
+          });
+        }
+      }
+    } else {
+      // For other types, just set the modal state
+      setModal({
+        show: true,
+        type,
+        rso: rso ?? null,
+        members: [],
+      });
+    }
   };
 
   const closeModal = () => {
@@ -132,6 +172,11 @@ export const useRsos = () => {
   // RSO operations
   const handleCreateRso = async () => {
     try {
+      // Make sure we have the current user's college if not specified in form
+      if (!formData.college.id && user?.college?.id) {
+        formData.college.id = user.college.id;
+      }
+
       const newRso = await rsoApi.createRso(formData);
       setRsos([...rsos, newRso]);
       toast.success("RSO created successfully");

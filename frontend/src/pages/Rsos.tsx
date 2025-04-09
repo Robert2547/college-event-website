@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRsos } from "../hooks/useRsos";
+import { useAuthStore } from "../hooks/useAuthStore";
 import { rsoApi } from "../api/rso";
 import Card from "../components/Card";
 import Modal from "../components/Modal";
@@ -10,6 +11,9 @@ import { validateRsoStatus, getRsoStatus } from "../utils/validateRsoStatus";
 import toast from "react-hot-toast";
 
 const Rsos: React.FC = () => {
+  // Get current user
+  const { user } = useAuthStore();
+
   const {
     rsos,
     loading,
@@ -32,16 +36,18 @@ const Rsos: React.FC = () => {
 
     setRefreshing(true);
     try {
+      console.log(`Refreshing members for RSO ID ${modal.rso.id}`); // Add log for refresh
       const members = await rsoApi.getRsoMembers(modal.rso.id);
+      console.log("Members fetched:", members); // Add log for fetched members
+      console.log(`Fetched ${members.length} members for RSO`); // Add log for fetched members count
 
       // Store the current RSO to use after fetching
       const currentRso = { ...modal.rso };
 
-      window.setTimeout(() => {
-        // Pass the currentRso as Rso instead of modal.rso which could be null
-        openModal("members", currentRso);
-        toast.success("Member list refreshed");
-      }, 500);
+      // Update modal state directly with the new members
+      openModal("members", currentRso); // Pass the fetched members
+
+      toast.success("Member list refreshed");
     } catch (error) {
       console.error("Error refreshing members:", error);
       toast.error("Failed to refresh member list");
@@ -62,7 +68,9 @@ const Rsos: React.FC = () => {
     if (rsos.length === 0) {
       return (
         <div className="text-center py-6">
-          <p className="text-gray-500">No RSOs found. Create your first RSO!</p>
+          <p className="text-gray-500">
+            No RSOs found. Create your first RSO using the button below!
+          </p>
         </div>
       );
     }
@@ -164,6 +172,9 @@ const Rsos: React.FC = () => {
     );
   };
 
+  // If no colleges are available, show a warning
+  const collegesAvailable = colleges && colleges.length > 0;
+
   return (
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -182,14 +193,37 @@ const Rsos: React.FC = () => {
               <div className="flex justify-end">
                 <button
                   onClick={() => openModal("add")}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  disabled={colleges.length === 0}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                    collegesAvailable
+                      ? "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                  disabled={!collegesAvailable}
                 >
                   Create New RSO
                 </button>
               </div>
             }
           >
+            {!collegesAvailable && !loading && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      No colleges are available. You need at least one college
+                      to create an RSO.
+                      {user?.role === "SUPER_ADMIN" && (
+                        <span>
+                          {" "}
+                          Please go to the College Management section to create
+                          a college first.
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             {renderContent()}
           </Card>
         </div>
@@ -326,16 +360,31 @@ const Rsos: React.FC = () => {
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Email
                           </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {modal.members.map((member) => (
                           <tr key={member.id}>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {member.firstName} {member.lastName}
+                              {member.user?.firstName} {member.user?.lastName}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {member.email}
+                              {member.user?.email}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {member.id === user?.id ||
+                              member.user?.id === user?.id ? (
+                                <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
+                                  Admin
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                  Member
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))}

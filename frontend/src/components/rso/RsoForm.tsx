@@ -1,6 +1,7 @@
 import React from "react";
 import { RsoRequest } from "../../types/rso";
 import { College } from "../../types/college";
+import { useAuthStore } from "../../hooks/useAuthStore";
 
 interface RsoFormProps {
   formData: RsoRequest;
@@ -19,6 +20,9 @@ const RsoForm: React.FC<RsoFormProps> = ({
   loadingColleges,
   onChange,
 }) => {
+  // Get current user to display information
+  const { user } = useAuthStore();
+
   return (
     <div className="p-4">
       <form className="space-y-4">
@@ -54,6 +58,11 @@ const RsoForm: React.FC<RsoFormProps> = ({
                 </option>
               ))}
             </select>
+          )}
+          {user?.college && (
+            <p className="mt-1 text-xs text-gray-500">
+              You are currently associated with: {user.college.name}
+            </p>
           )}
         </div>
 
@@ -92,6 +101,16 @@ const RsoForm: React.FC<RsoFormProps> = ({
             rows={3}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
+        </div>
+
+        {/* Admin Information (Read-only) */}
+        <div className="pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-600">
+            <strong>RSO Admin:</strong> {user?.firstName} {user?.lastName}
+          </p>
+          <p className="text-sm text-gray-600">
+            <strong>Email:</strong> {user?.email}
+          </p>
         </div>
       </form>
     </div>
