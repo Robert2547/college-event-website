@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../hooks/useAuthStore";
+import Calendar from "../components/Calendar";
 import toast from "react-hot-toast";
 import Card from "../components/Card";
 
@@ -12,7 +13,9 @@ const Dashboard = () => {
     <div className="py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Welcome back {user?.firstName}!</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Welcome back {user?.firstName}!
+        </p>
 
         {/* User Information Card */}
         <div className="mt-6">
@@ -39,6 +42,12 @@ const Dashboard = () => {
                 <p className="mt-1 text-sm text-gray-900">#{user?.id}</p>
               </div>
             </div>
+          </Card>
+        </div>
+
+        <div className="mt-6">
+          <Card title="My Calendar">
+            <Calendar />
           </Card>
         </div>
       </div>
