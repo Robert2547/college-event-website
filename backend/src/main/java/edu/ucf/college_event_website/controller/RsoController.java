@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -76,5 +77,30 @@ public class RsoController {
     public ResponseEntity<Void> leaveRso(@PathVariable Long id) {
         rsoService.leaveRso(id);
         return ResponseEntity.ok().build();
+    }
+
+    // Admin endpoint to add a member to RSO
+    @PostMapping("/admin/rsos/{rsoId}/members")
+    public ResponseEntity<Void> addMemberToRso(
+            @PathVariable Long rsoId,
+            @RequestBody Map<String, Long> request) {
+
+        Long userId = request.get("userId");
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        rsoService.addMemberToRso(rsoId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Admin endpoint to remove a member from RSO
+    @DeleteMapping("/admin/rsos/{rsoId}/members/{userId}")
+    public ResponseEntity<Void> removeMemberFromRso(
+            @PathVariable Long rsoId,
+            @PathVariable Long userId) {
+
+        rsoService.removeMemberFromRso(rsoId, userId);
+        return ResponseEntity.noContent().build();
     }
 }

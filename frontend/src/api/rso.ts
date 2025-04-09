@@ -108,4 +108,23 @@ export const rsoApi = {
       throw error;
     }
   },
+  // Add a member to RSO (admin function)
+  addMemberToRso: async (rsoId: number, userId: number): Promise<void> => {
+    try {
+      await authAxios.post(`/api/admin/rsos/${rsoId}/members`, { userId });
+    } catch (error) {
+      console.error("Add member to RSO error:", error);
+      throw error;
+    }
+  },
+
+  // Remove a member from RSO (admin function)
+  removeMemberFromRso: async (rsoId: number, userId: number): Promise<void> => {
+    try {
+      await authAxios.delete(`/api/admin/rsos/${rsoId}/members/${userId}`);
+    } catch (error) {
+      console.error("Remove member from RSO error:", error);
+      throw error;
+    }
+  },
 };

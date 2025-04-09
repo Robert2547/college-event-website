@@ -1,7 +1,10 @@
 package edu.ucf.college_event_website.service;
 
 import edu.ucf.college_event_website.model.*;
-import edu.ucf.college_event_website.repository.*;
+import edu.ucf.college_event_website.repository.CollegeRepository;
+import edu.ucf.college_event_website.repository.RsoMembershipRepository;
+import edu.ucf.college_event_website.repository.RsoRepository;
+import edu.ucf.college_event_website.repository.UserRepository;
 import edu.ucf.college_event_website.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -197,5 +200,73 @@ public class RsoService {
 
         // Remove membership
         rsoMembershipRepository.deleteByUserIdAndRsoId(currentUser.getId(), rsoId);
+    }
+
+    /**
+     * Add a user to an RSO (admin only)
+     */
+    @Transactional
+    public void addMemberToRso(Long rsoId, Long userId) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Find RSO
+        Rso rso = rsoRepository.findById(rsoId)
+                .orElseThrow(() -> new EntityNotFoundException("RSO not found"));
+
+        // Check if current user is admin of this RSO
+        if (!rso.getAdmin().getId().equals(currentUser.getId()) && !securityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("Only the RSO admin can add members");
+        }
+
+        // Find user to add
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Check if user is already a member
+        if (rsoMembershipRepository.existsByUserIdAndRsoId(userId, rsoId)) {
+            throw new RuntimeException("User is already a member of this RSO");
+        }
+
+        // Create new membership
+        RsoMembership membership = new RsoMembership();
+        RsoMembershipKey membershipKey = new RsoMembershipKey(userId, rsoId);
+        membership.setId(membershipKey);
+        membership.setUser(user);
+        membership.setRso(rso);
+
+        // Save membership
+        rsoMembershipRepository.save(membership);
+    }
+
+    /**
+     * Remove a user from an RSO (admin only)
+     */
+    @Transactional
+    public void removeMemberFromRso(Long rsoId, Long userId) {
+        // Get authenticated user
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Find RSO
+        Rso rso = rsoRepository.findById(rsoId)
+                .orElseThrow(() -> new EntityNotFoundException("RSO not found"));
+
+        // Check if current user is admin of this RSO
+        if (!rso.getAdmin().getId().equals(currentUser.getId()) && !securityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("Only the RSO admin can remove members");
+        }
+
+        // Make sure we're not removing the admin
+        if (rso.getAdmin().getId().equals(userId)) {
+            throw new AccessDeniedException("Cannot remove the RSO admin");
+        }
+
+        // Check if user is a member
+        if (!rsoMembershipRepository.existsByUserIdAndRsoId(userId, rsoId)) {
+            throw new RuntimeException("User is not a member of this RSO");
+        }
+
+        // Remove membership
+        rsoMembershipRepository.deleteByUserIdAndRsoId(userId, rsoId);
     }
 }
