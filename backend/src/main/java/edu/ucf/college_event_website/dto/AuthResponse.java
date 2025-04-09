@@ -21,7 +21,7 @@ public class AuthResponse {
         private final String firstName;
         private final String lastName;
         private final String role;
-        private final CollegeDto college;
+        private final College college;
 
         public UserDto(User user) {
             this.id = user.getId();
@@ -29,18 +29,7 @@ public class AuthResponse {
             this.firstName = user.getFirstName();
             this.lastName = user.getLastName();
             this.role = user.getRole().name();
-            this.college = new CollegeDto(user.getCollege());
-        }
-
-        @Getter
-        public static class CollegeDto {
-            private final Long id;
-            private final String name;
-
-            public CollegeDto(College college) {
-                this.id = college.getId();
-                this.name = college.getName();
-            }
+            this.college = user.getCollege(); // 👈 this is what you need!
         }
     }
 }

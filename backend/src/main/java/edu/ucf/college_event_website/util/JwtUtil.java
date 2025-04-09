@@ -33,13 +33,13 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
-        String role = userDetails.getAuthorities().stream()
-                .findFirst()
-                .map(GrantedAuthority::getAuthority)
-                .map(r -> r.replace("ROLE_", ""))
-                .orElse("STUDENT"); // fallback if role isn't found
+        // ✅ Extract just role strings (e.g., ["ADMIN", "SUPER_ADMIN"])
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority) // gets "ROLE_ADMIN"
+                .map(role -> role.replace("ROLE_", "")) // optional: strip prefix to match your own role names
+                .toList();
 
-        claims.put("role", role); // ✅ single role, consistent with JwtAuthenticationFilter
+        claims.put("roles", roles); // ✅ now it's List<String>
         return createToken(claims, userDetails.getUsername());
     }
 

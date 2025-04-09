@@ -59,11 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (jwtUtil.validateToken(jwt, userDetails)) {
                         // Create authentication object
                         Claims claims = jwtUtil.extractAllClaims(jwt);
-                        String role = claims.get("role", String.class); // changed key to "role", singular
+                        List<String> roles = claims.get("roles", List.class);
 
-                        List<GrantedAuthority> authorities = List.of(
-                                new SimpleGrantedAuthority("ROLE_" + role)
-                        );
+                        List<GrantedAuthority> authorities = roles.stream()
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role)) // ✅ Spring requires "ROLE_" prefix
+                                .collect(Collectors.toList());
 
 
                         UsernamePasswordAuthenticationToken authentication =

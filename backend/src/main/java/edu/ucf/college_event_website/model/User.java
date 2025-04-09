@@ -1,6 +1,5 @@
 package edu.ucf.college_event_website.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
