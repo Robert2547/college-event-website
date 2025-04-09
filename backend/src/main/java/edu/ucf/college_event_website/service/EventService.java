@@ -122,20 +122,27 @@ public class EventService {
         event.setContactEmail(request.getContactEmail());
         event.setContactPhone(request.getContactPhone());
 
-        // Save event to database
-        Event savedEvent = eventRepository.save(event);
+        // Save event to database and ensure it's committed immediately
+        Event savedEvent = eventRepository.saveAndFlush(event);
 
-        switch (request.getEventType()) {
-            case PUBLIC:
-                createPublicEvent(savedEvent, request, currentUser);
-                break;
-            case PRIVATE:
-                createPrivateEvent(savedEvent, request, currentUser);
-                break;
-            case RSO:
-                createRsoEvent(savedEvent, request, currentUser);
-                break;
+
+        try {
+            switch (request.getEventType()) {
+                case PUBLIC:
+                    createPublicEvent(savedEvent, request, currentUser);
+                    break;
+                case PRIVATE:
+                    createPrivateEvent(savedEvent, request, currentUser);
+                    break;
+                case RSO:
+                    createRsoEvent(savedEvent, request, currentUser);
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("Error creating specialized event: " + e.getMessage());
+            throw e;
         }
+
         // Convert to DTO and return
         return convertToDTO(savedEvent);
     }
@@ -171,8 +178,8 @@ public class EventService {
         if (request.getContactEmail() != null) event.setContactEmail(request.getContactEmail());
         if (request.getContactPhone() != null) event.setContactPhone(request.getContactPhone());
 
-        // Save updated event
-        Event updatedEvent = eventRepository.save(event);
+        // Save updated event with flush
+        Event updatedEvent = eventRepository.saveAndFlush(event);
 
         // Convert to DTO and return
         return convertToDTO(updatedEvent);
@@ -195,24 +202,37 @@ public class EventService {
         }
 
         // Delete specialized event record first
-        switch (event.getEventType()) {
-            case PUBLIC:
-                publicEventRepository.deleteById(id);
-                break;
-            case PRIVATE:
-                privateEventRepository.deleteById(id);
-                break;
-            case RSO:
-                rsoEventRepository.deleteById(id);
-                break;
+        try {
+            switch (event.getEventType()) {
+                case PUBLIC:
+                    publicEventRepository.deleteById(id);
+                    publicEventRepository.flush();
+                    break;
+                case PRIVATE:
+                    privateEventRepository.deleteById(id);
+                    privateEventRepository.flush();
+                    break;
+                case RSO:
+                    rsoEventRepository.deleteById(id);
+                    rsoEventRepository.flush();
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("Error deleting specialized event: " + e.getMessage());
+            throw e;
         }
 
         // Delete comments and ratings related to this event
-        commentRepository.findByEventIdOrderByTimestampDesc(id)
-                .forEach(comment -> commentRepository.delete(comment));
+        try {
+            commentRepository.deleteByEventId(id);
+            commentRepository.flush();
+        } catch (Exception e) {
+            System.err.println("Error deleting comments: " + e.getMessage());
+        }
 
         // Delete the event
         eventRepository.delete(event);
+        eventRepository.flush();
     }
 
     // Get event by ID (with access check)
@@ -337,7 +357,7 @@ public class EventService {
             publicEvent.setSuperAdmin(currentUser);
         }
 
-        publicEventRepository.save(publicEvent);
+        publicEventRepository.saveAndFlush(publicEvent);
     }
 
     private void createPrivateEvent(Event event, EventCreateRequest request, User currentUser) {
@@ -346,7 +366,7 @@ public class EventService {
         privateEvent.setId(event.getId());
         privateEvent.setAdmin(currentUser);
 
-        privateEventRepository.save(privateEvent);
+        privateEventRepository.saveAndFlush(privateEvent);
     }
 
     private void createRsoEvent(Event event, EventCreateRequest request, User currentUser) {
@@ -358,7 +378,7 @@ public class EventService {
         rsoEvent.setEvent(event);
         rsoEvent.setRso(rso);
 
-        rsoEventRepository.save(rsoEvent);
+        rsoEventRepository.saveAndFlush(rsoEvent);
     }
 
     // Get events by date range
