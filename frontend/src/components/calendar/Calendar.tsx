@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Event } from "../../types/event";
+import { Event, EventComment } from "../../types/event";
 import { eventApi } from "../../api/event";
 import { rsoApi } from "../../api/rso";
 import { useAuthStore } from "../../hooks/useAuthStore";
 import EventCard from "../EventCard";
-import { Star } from "lucide-react";
+import { Star, MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import StarRating from "./StarRating";
 import EventDetailModal from "./EventDetailModal";
@@ -21,6 +21,8 @@ const Calendar = () => {
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventRating, setEventRating] = useState<any>(null);
+  const [eventComments, setEventComments] = useState<EventComment[]>([]);
+  const [newComment, setNewComment] = useState<string>("");
   const [position, setPosition] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
@@ -58,22 +60,66 @@ const Calendar = () => {
     fetchEvents();
   }, [user, currentDate]);
 
-  // Fetch rating when event selected
+  // Fetch rating and comments when event selected
   useEffect(() => {
-    const fetchEventRating = async () => {
+    const fetchEventDetails = async () => {
       if (selectedEvent) {
         try {
+          // Fetch rating
           const rating = await eventApi.getEventRating(selectedEvent.id);
           setEventRating(rating);
+
+          // Fetch comments
+          const comments = await eventApi.getEventComments(selectedEvent.id);
+          setEventComments(comments);
         } catch (error) {
-          console.error("Failed to fetch event rating", error);
+          console.error("Failed to fetch event details", error);
           setEventRating(null);
+          setEventComments([]);
         }
       }
     };
 
-    fetchEventRating();
+    fetchEventDetails();
   }, [selectedEvent]);
+
+  // Add comment handler
+  const handleAddComment = async () => {
+    if (!selectedEvent || !newComment.trim()) return;
+
+    try {
+      const addedComment = await eventApi.addComment(
+        selectedEvent.id,
+        newComment
+      );
+      setEventComments([...eventComments, addedComment]);
+      setNewComment("");
+      toast.success("Comment added successfully!");
+    } catch (error) {
+      console.error("Failed to add comment", error);
+      toast.error("Failed to add comment");
+    }
+  };
+
+  const handleRateEvent = async (eventId: number, rating: number) => {
+    try {
+      // Submit the rating to the backend
+      await eventApi.rateEvent(eventId, rating);
+
+      // Fetch the updated rating after submission
+      const updatedRating = await eventApi.getEventRating(eventId);
+
+      // Update the event rating in the state
+      setEventRating(updatedRating);
+
+      // Optional: Show a success toast
+      toast.success("Rating submitted successfully!");
+    } catch (error) {
+      // Handle any errors during rating submission
+      console.error("Failed to submit rating", error);
+      toast.error("Failed to submit rating");
+    }
+  };
 
   // Build calendar grid
   const buildCalendar = (events: Event[]) => {
@@ -114,14 +160,6 @@ const Calendar = () => {
 
   const handleCloseModal = () => {
     setSelectedEvent(null);
-    setEventRating(null);
-  };
-
-  const handleRateEvent = async (eventId: number, rating: number) => {
-    await eventApi.rateEvent(eventId, rating);
-    // Refresh the rating after submission
-    const updatedRating = await eventApi.getEventRating(eventId);
-    setEventRating(updatedRating);
   };
 
   // Helper to generate day header labels
@@ -171,10 +209,8 @@ const Calendar = () => {
           ▶
         </button>
       </div>
-
       {/* Day headers */}
       {renderDayHeaders()}
-
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-1 border-t border-l rounded-lg overflow-hidden">
         {calendarDays.map((day, index) => (
@@ -221,7 +257,6 @@ const Calendar = () => {
           </div>
         ))}
       </div>
-
       {/* Hover preview */}
       {hoveredEvent && (
         <div
@@ -233,15 +268,9 @@ const Calendar = () => {
           </div>
         </div>
       )}
-
       {/* Event detail modal */}
       {selectedEvent && (
-        <EventDetailModal
-          event={selectedEvent}
-          onClose={handleCloseModal}
-          onRate={handleRateEvent}
-          eventRating={eventRating}
-        />
+        <EventDetailModal event={selectedEvent} onClose={handleCloseModal} />
       )}
     </div>
   );

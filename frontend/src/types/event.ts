@@ -38,6 +38,7 @@ export interface EventCreateRequest extends EventUpdateRequest {
 
 export interface EventComment {
   id: number;
+  userId: number;
   content: string;
   date: string;
   time: string;

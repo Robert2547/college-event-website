@@ -1,24 +1,27 @@
-import { Event, EventCreateRequest, EventUpdateRequest } from "../types/event";
+import {
+  Event,
+  EventCreateRequest,
+  EventUpdateRequest,
+  EventComment,
+} from "../types/event";
 import { authAxios } from "./auth";
 
 export const eventApi = {
-  // Get private events
   getPrivateEvents: async () => {
     const res = await authAxios.get("/api/events/filter/type/PRIVATE");
     return res.data;
   },
 
-  // Get RSO events
   getRsoEvents: async (rsoId: number) => {
     const res = await authAxios.get(`/api/rsos/${rsoId}/events`);
     return res.data;
   },
-  // Get public events
+
   getPublicEvents: async () => {
     const res = await authAxios.get("/api/events/filter/type/PUBLIC");
     return res.data;
   },
-  // Get all events accessible to the current user
+
   getAllEvents: async (): Promise<Event[]> => {
     try {
       const response = await authAxios.get("/api/events");
@@ -29,7 +32,6 @@ export const eventApi = {
     }
   },
 
-  // Get event by ID
   getEventById: async (id: number): Promise<Event> => {
     try {
       const response = await authAxios.get(`/api/events/${id}`);
@@ -40,7 +42,7 @@ export const eventApi = {
     }
   },
 
-  // Create a new event (Admin only)
+  // Event CRUD operations
   createEvent: async (eventData: EventCreateRequest): Promise<Event> => {
     try {
       const response = await authAxios.post("/api/events", eventData);
@@ -51,7 +53,6 @@ export const eventApi = {
     }
   },
 
-  // Create RSO event (Admin only)
   createRsoEvent: async (
     rsoId: number,
     eventData: EventCreateRequest
@@ -68,7 +69,6 @@ export const eventApi = {
     }
   },
 
-  // Update event (Admin only)
   updateEvent: async (
     id: number,
     eventData: EventUpdateRequest
@@ -82,7 +82,6 @@ export const eventApi = {
     }
   },
 
-  // Delete event (Admin only)
   deleteEvent: async (id: number): Promise<void> => {
     try {
       await authAxios.delete(`/api/events/${id}`);
@@ -92,8 +91,21 @@ export const eventApi = {
     }
   },
 
-  // Add comment to event
-  addComment: async (eventId: number, content: string): Promise<any> => {
+  // Comment operations
+  getEventComments: async (eventId: number): Promise<EventComment[]> => {
+    try {
+      const response = await authAxios.get(`/api/events/${eventId}/comments`);
+      return response.data;
+    } catch (error) {
+      console.error("Get event comments error:", error);
+      throw error;
+    }
+  },
+
+  addComment: async (
+    eventId: number,
+    content: string
+  ): Promise<EventComment> => {
     try {
       const response = await authAxios.post(`/api/events/${eventId}/comments`, {
         content,
@@ -105,7 +117,35 @@ export const eventApi = {
     }
   },
 
-  // Rate event
+  updateComment: async (
+    eventId: number,
+    commentId: number,
+    content: string
+  ): Promise<EventComment> => {
+    try {
+      const response = await authAxios.put(
+        `/api/events/${eventId}/comments/${commentId}`,
+        {
+          content,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Update comment error:", error);
+      throw error;
+    }
+  },
+
+  deleteComment: async (eventId: number, commentId: number): Promise<void> => {
+    try {
+      await authAxios.delete(`/api/events/${eventId}/comments/${commentId}`);
+    } catch (error) {
+      console.error("Delete comment error:", error);
+      throw error;
+    }
+  },
+
+  // Rating operations
   rateEvent: async (eventId: number, rating: number): Promise<any> => {
     try {
       const response = await authAxios.post(`/api/events/${eventId}/ratings`, {
@@ -118,18 +158,6 @@ export const eventApi = {
     }
   },
 
-  // Get event comments
-  getEventComments: async (eventId: number): Promise<any[]> => {
-    try {
-      const response = await authAxios.get(`/api/events/${eventId}/comments`);
-      return response.data;
-    } catch (error) {
-      console.error("Get event comments error:", error);
-      throw error;
-    }
-  },
-
-  // Get event rating
   getEventRating: async (eventId: number): Promise<any> => {
     try {
       const response = await authAxios.get(`/api/events/${eventId}/ratings`);
