@@ -12,6 +12,7 @@ export interface SignUpCredentials extends LoginCredentials {
   lastName: string;
   passwordConfirmation: string;
   role: Role;
+  collegeId?: number;
 }
 
 export interface AuthState {
