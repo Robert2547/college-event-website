@@ -70,7 +70,7 @@ public class PublicEventService {
         publicEvent.setSuperAdmin(currentUser);
 
         // Save updated public event
-        publicEventRepository.save(publicEvent);
+        publicEventRepository.saveAndFlush(publicEvent);
 
         // Return updated event response
         return eventService.getEventById(eventId);
@@ -97,8 +97,10 @@ public class PublicEventService {
 
         // Delete public event
         publicEventRepository.delete(publicEvent);
+        publicEventRepository.flush();
 
         // Delete the event
         eventRepository.delete(event);
+        eventRepository.flush();
     }
 }
