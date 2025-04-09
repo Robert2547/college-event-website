@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../hooks/useAuthStore";
-import Calendar from "../components/Calendar";
+import Calendar from "../components/calendar/Calendar";
 import toast from "react-hot-toast";
 import Card from "../components/Card";
 
