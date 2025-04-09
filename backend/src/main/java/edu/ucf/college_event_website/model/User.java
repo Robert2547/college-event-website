@@ -35,6 +35,7 @@ public class User {
     // Many users to one college
     @ManyToOne
     @JoinColumn(name = "college_id")
+    @JsonBackReference(value = "user-college")
     private College college;
 
 }

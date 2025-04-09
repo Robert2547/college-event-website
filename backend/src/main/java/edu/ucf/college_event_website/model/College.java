@@ -30,5 +30,6 @@ public class College {
     // Many colleges can be created by one user
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
+    @JsonManagedReference(value = "college-created-by")
     private User createdBy;
 }

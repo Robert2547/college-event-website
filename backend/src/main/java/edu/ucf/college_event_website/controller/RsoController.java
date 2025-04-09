@@ -1,5 +1,6 @@
 package edu.ucf.college_event_website.controller;
 
+import edu.ucf.college_event_website.dto.RsoResponse;
 import edu.ucf.college_event_website.model.Rso;
 import edu.ucf.college_event_website.model.RsoMembership;
 import edu.ucf.college_event_website.service.RsoService;
@@ -19,36 +20,42 @@ public class RsoController {
 
     // Get all RSOs
     @GetMapping("/rsos")
-    public ResponseEntity<List<Rso>> getAllRsos() {
-        return ResponseEntity.ok(rsoService.getAllRsos());
+    public ResponseEntity<List<RsoResponse>> getAllRsos() {
+        List<Rso> rawRsos = rsoService.getAllRsos();
+        List<RsoResponse> responses = rawRsos.stream().map(this::toDto).toList();
+        return ResponseEntity.ok(responses);
     }
 
     // Get RSOs administered by current user
     @GetMapping("/admin/rsos")
-    public ResponseEntity<List<Rso>> getMyRsos() {
-        return ResponseEntity.ok(rsoService.getRsosByCurrentAdmin());
+    public ResponseEntity<List<RsoResponse>> getMyRsos() {
+        List<Rso> rawRsos = rsoService.getRsosByCurrentAdmin();
+        List<RsoResponse> responses = rawRsos.stream().map(this::toDto).toList();
+        return ResponseEntity.ok(responses);
     }
 
     // Get RSO by ID
     @GetMapping("/rsos/{id}")
-    public ResponseEntity<Rso> getRsoById(@PathVariable Long id) {
-        return ResponseEntity.ok(rsoService.getRsoById(id));
+    public ResponseEntity<RsoResponse> getRsoById(@PathVariable Long id) {
+        Rso rso = rsoService.getRsoById(id);
+        return ResponseEntity.ok(toDto(rso));
     }
 
     // Create new RSO (Admin only)
     @PostMapping("/admin/rsos")
-    public ResponseEntity<Rso> createRso(@RequestBody Rso rso) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(rsoService.createRso(rso));
+    public ResponseEntity<RsoResponse> createRso(@RequestBody Rso rso) {
+        Rso created = rsoService.createRso(rso);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDto(created));
     }
 
     // Update RSO (Admin only)
     @PutMapping("/admin/rsos/{id}")
-    public ResponseEntity<Rso> updateRso(
+    public ResponseEntity<RsoResponse> updateRso(
             @PathVariable Long id,
             @RequestBody Rso rso
     ) {
-        return ResponseEntity.ok(rsoService.updateRso(id, rso));
+        Rso updated = rsoService.updateRso(id, rso);
+        return ResponseEntity.ok(toDto(updated));
     }
 
     // Delete RSO (Admin only)
@@ -76,5 +83,24 @@ public class RsoController {
     public ResponseEntity<Void> leaveRso(@PathVariable Long id) {
         rsoService.leaveRso(id);
         return ResponseEntity.ok().build();
+    }
+
+    private RsoResponse toDto(Rso rso) {
+        RsoResponse dto = new RsoResponse();
+        dto.setId(rso.getId());
+        dto.setName(rso.getName());
+        dto.setDescription(rso.getDescription());
+
+        if (rso.getCollege() != null) {
+            dto.setCollegeId(rso.getCollege().getId());
+            dto.setCollegeName(rso.getCollege().getName());
+        }
+
+        if (rso.getAdmin() != null) {
+            dto.setAdminId(rso.getAdmin().getId());
+            dto.setAdminName(rso.getAdmin().getFirstName() + " " + rso.getAdmin().getLastName());
+        }
+
+        return dto;
     }
 }

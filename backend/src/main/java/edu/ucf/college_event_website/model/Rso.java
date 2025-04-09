@@ -1,5 +1,6 @@
 package edu.ucf.college_event_website.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +28,7 @@ public class Rso {
 
     @ManyToOne
     @JoinColumn(name = "college_id", nullable = false)
+    @JsonManagedReference(value = "rso-college")
     private College college;
 
     @Enumerated(EnumType.STRING)
