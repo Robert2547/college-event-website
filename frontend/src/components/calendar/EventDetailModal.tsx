@@ -165,26 +165,26 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
           {/* Event Details Section */}
           <div className="border-t border-b border-gray-200 py-3 my-3">
             <div className="flex justify-between mb-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 text-left">
                 📅 {event.date} @ 🕒 {event.time}
               </span>
-              <span className="text-sm text-gray-600 px-2 py-1 bg-blue-100 rounded-full">
+              <span className="text-sm text-gray-600 px-2 py-1 bg-blue-100 rounded-full text-left">
                 {event.eventType}
               </span>
             </div>
 
             {event.location && (
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 mb-2 text-left py-1">
                 📍 {event.location.name}, {event.location.address}
               </p>
             )}
 
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 text-left py-1 ">
               📧 {event.contactEmail || "No contact email provided"}
             </p>
 
             {event.contactPhone && (
-              <p className="text-sm text-gray-600">📱 {event.contactPhone}</p>
+              <p className="text-sm text-gray-600 text-left py-1">📱 {event.contactPhone}</p>
             )}
           </div>
 
