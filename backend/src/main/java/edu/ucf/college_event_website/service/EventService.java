@@ -346,24 +346,27 @@ public class EventService {
 
     // Helper methods for creating specialized events
     private void createPublicEvent(Event event, EventCreateRequest request, User currentUser) {
-        PublicEvent publicEvent = new PublicEvent();
-        publicEvent.setEvent(event);
-        publicEvent.setId(event.getId());
-        publicEvent.setApproved(false); // start as unapproved
-
-        // Check if currentUser is SUPER_ADMIN, auto-approve
-        if (securityUtils.isSuperAdmin()) {
-            publicEvent.setApproved(true);
+        try {
+            // Explicitly create and persist the PublicEvent
+            PublicEvent publicEvent = new PublicEvent();
+            publicEvent.setEvent(event);
             publicEvent.setSuperAdmin(currentUser);
-        }
+            publicEvent.setApproved(securityUtils.isSuperAdmin());
 
-        publicEventRepository.saveAndFlush(publicEvent);
+            publicEvent = publicEventRepository.save(publicEvent);
+
+            publicEventRepository.flush();
+
+        } catch (Exception e) {
+            System.err.println("Comprehensive Error Creating Public Event:");
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create public event", e);
+        }
     }
 
     private void createPrivateEvent(Event event, EventCreateRequest request, User currentUser) {
         PrivateEvent privateEvent = new PrivateEvent();
         privateEvent.setEvent(event);
-        privateEvent.setId(event.getId());
         privateEvent.setAdmin(currentUser);
 
         privateEventRepository.saveAndFlush(privateEvent);
@@ -374,7 +377,6 @@ public class EventService {
                 .orElseThrow(() -> new EntityNotFoundException("RSO not found"));
 
         RsoEvent rsoEvent = new RsoEvent();
-        rsoEvent.setId(event.getId());
         rsoEvent.setEvent(event);
         rsoEvent.setRso(rso);
 
