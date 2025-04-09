@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { eventApi } from "../../api/event";
 import { EventComment } from "../../types/event";
+import { eventApi } from "../../api/event";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../hooks/useAuthStore";
 
 interface CommentSectionProps {
   eventId: number;
 }
 
 const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
+  const { user } = useAuthStore();
   const [comments, setComments] = useState<EventComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
@@ -15,7 +17,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
   const [editText, setEditText] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch comments when component mounts or eventId changes
+  // Fetch comments when component mounts
   useEffect(() => {
     const fetchComments = async () => {
       setLoading(true);
@@ -33,7 +35,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
     fetchComments();
   }, [eventId]);
 
-  // Handle adding a new comment
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
@@ -51,7 +52,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
     }
   };
 
-  // Handle updating a comment
   const handleUpdateComment = async (commentId: number) => {
     if (!editText.trim()) return;
 
@@ -77,7 +77,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
     }
   };
 
-  // Handle deleting a comment
   const handleDeleteComment = async (commentId: number) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this comment?"
@@ -94,17 +93,21 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
     }
   };
 
-  // Start editing a comment
   const startEditing = (comment: EventComment) => {
     setEditingId(comment.id);
     setEditText(comment.content);
   };
 
-  // Cancel editing
   const cancelEditing = () => {
     setEditingId(null);
     setEditText("");
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-4 text-gray-500">Loading comments...</div>
+    );
+  }
 
   return (
     <div className="mt-4">
@@ -136,11 +139,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
       </div>
 
       {/* Comments list */}
-      {loading ? (
-        <div className="text-center py-4 text-gray-500">
-          Loading comments...
-        </div>
-      ) : comments.length === 0 ? (
+      {comments.length === 0 ? (
         <div className="text-center py-4 text-gray-500">
           No comments yet. Be the first to comment!
         </div>
@@ -193,20 +192,22 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
                   <div className="mt-1 text-sm text-gray-700">
                     {comment.content}
                   </div>
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <button
-                      className="text-xs text-blue-600 hover:text-blue-800"
-                      onClick={() => startEditing(comment)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-xs text-red-600 hover:text-red-800"
-                      onClick={() => handleDeleteComment(comment.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                        onClick={() => startEditing(comment)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-xs text-red-600 hover:text-red-800"
+                        onClick={() => handleDeleteComment(comment.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  }
                 </div>
               )}
             </div>

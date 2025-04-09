@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../hooks/useAuthStore";
 import { eventApi } from "../../api/event";
 import { Event, EventRating } from "../../types/event";
-import { Star, MessageCircle } from "lucide-react";
+import { Star } from "lucide-react";
 import toast from "react-hot-toast";
-import CommentsPreview from "./CommentsPreview";
+import CommentSection from "./CommentSection";
 
 interface EventDetailModalProps {
   event: Event;
@@ -17,31 +17,10 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
 }) => {
   const { user } = useAuthStore();
 
-  // Comments state
-  const [comments, setComments] = useState<any[]>([]);
-  const [commentsLoading, setCommentsLoading] = useState(true);
-  const [newComment, setNewComment] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState("");
-
   // Ratings state
   const [rating, setRating] = useState<EventRating | null>(null);
   const [ratingLoading, setRatingLoading] = useState(true);
   const [userRating, setUserRating] = useState(0);
-
-  // Fetch comments
-  const fetchComments = async () => {
-    setCommentsLoading(true);
-    try {
-      const fetchedComments = await eventApi.getEventComments(event.id);
-      setComments(fetchedComments);
-    } catch (error) {
-      console.error("Failed to fetch comments:", error);
-      toast.error("Failed to load comments");
-    } finally {
-      setCommentsLoading(false);
-    }
-  };
 
   // Fetch ratings
   const fetchRating = async () => {
@@ -58,59 +37,8 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
 
   // Initial data fetch
   useEffect(() => {
-    fetchComments();
     fetchRating();
   }, [event.id]);
-
-  // Add comment handler
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-
-    try {
-      const addedComment = await eventApi.addComment(event.id, newComment);
-      setComments([addedComment, ...comments]);
-      setNewComment("");
-      toast.success("Comment added successfully");
-    } catch (error) {
-      console.error("Failed to add comment:", error);
-      toast.error("Failed to add comment");
-    }
-  };
-
-  // Update comment handler
-  const handleUpdateComment = async (commentId: number) => {
-    if (!editText.trim()) return;
-
-    try {
-      const updatedComment = await eventApi.updateComment(
-        event.id,
-        commentId,
-        editText
-      );
-      setComments(
-        comments.map((comment) =>
-          comment.id === commentId ? updatedComment : comment
-        )
-      );
-      setEditingId(null);
-      toast.success("Comment updated successfully");
-    } catch (error) {
-      console.error("Failed to update comment:", error);
-      toast.error("Failed to update comment");
-    }
-  };
-
-  // Delete comment handler
-  const handleDeleteComment = async (commentId: number) => {
-    try {
-      await eventApi.deleteComment(event.id, commentId);
-      setComments(comments.filter((comment) => comment.id !== commentId));
-      toast.success("Comment deleted successfully");
-    } catch (error) {
-      console.error("Failed to delete comment:", error);
-      toast.error("Failed to delete comment");
-    }
-  };
 
   // Rate event handler
   const handleRateEvent = async () => {
@@ -230,124 +158,7 @@ const EventDetailModal: React.FC<EventDetailModalProps> = ({
           </div>
 
           {/* Comments Section */}
-          <div className="mt-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">Comments</h3>
-              {comments.length > 0 && (
-                <CommentsPreview count={comments.length} />
-              )}
-            </div>
-
-            {/* Comment Input */}
-            <div className="mb-4">
-              <textarea
-                className="w-full border border-gray-300 rounded-md p-2 text-sm"
-                rows={2}
-                placeholder="Add a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-              ></textarea>
-              <div className="flex justify-end mt-2">
-                <button
-                  className={`px-3 py-1 rounded text-sm font-medium ${
-                    !newComment.trim()
-                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                >
-                  Post Comment
-                </button>
-              </div>
-            </div>
-
-            {/* Comments List */}
-            {commentsLoading ? (
-              <div className="text-center py-4 text-gray-500">
-                Loading comments...
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
-                No comments yet. Be the first to comment!
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="border-b border-gray-200 pb-3"
-                  >
-                    {editingId === comment.id ? (
-                      /* Edit mode */
-                      <div>
-                        <textarea
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm"
-                          rows={2}
-                          value={editText}
-                          onChange={(e) => setEditText(e.target.value)}
-                        ></textarea>
-                        <div className="flex justify-end mt-2 space-x-2">
-                          <button
-                            className="px-3 py-1 rounded text-sm font-medium text-gray-600 hover:text-gray-800"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className={`px-3 py-1 rounded text-sm font-medium ${
-                              !editText.trim()
-                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                : "bg-blue-600 text-white hover:bg-blue-700"
-                            }`}
-                            onClick={() => handleUpdateComment(comment.id)}
-                            disabled={!editText.trim()}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Display mode */
-                      <div>
-                        <div className="flex justify-between items-start">
-                          <div className="text-sm font-medium text-gray-900">
-                            {comment.userName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {comment.date} {comment.time}
-                          </div>
-                        </div>
-                        <div className="mt-1 text-sm text-gray-700">
-                          {comment.content}
-                        </div>
-                        {user?.id === comment.userId &&
-                          editingId !== comment.id && (
-                            <div className="flex justify-end mt-2 space-x-2">
-                              <button
-                                className="text-xs text-blue-600 hover:text-blue-800"
-                                onClick={() => {
-                                  setEditingId(comment.id);
-                                  setEditText(comment.content);
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="text-xs text-red-600 hover:text-red-800"
-                                onClick={() => handleDeleteComment(comment.id)}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CommentSection eventId={event.id} />
         </div>
       </div>
     </div>
