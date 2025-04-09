@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { createLocation } from "../api/location";
 import toast from "react-hot-toast";
 import { EventCreateRequest, EventType } from "../types/event";
 import MapPicker, { SelectedLocation } from "../components/MapPicker";
 import { eventApi } from "../api/event";
 import { useColleges, useRsos } from "../hooks/useDataFetching";
+import { College } from "../types/college";
 
 const CreateEventForm: React.FC = () => {
   const stored = localStorage.getItem("auth-storage");
@@ -30,27 +31,7 @@ const CreateEventForm: React.FC = () => {
   const [selectedLocation, setSelectedLocation] =
     useState<SelectedLocation | null>(null);
 
-  // Update collegeId when colleges are loaded
-  useEffect(() => {
-    if (colleges.length > 0 && !formData.collegeId) {
-      setFormData((prev) => ({
-        ...prev,
-        collegeId: user?.college?.id || colleges[0].id,
-      }));
-    }
-  }, [colleges, user]);
-
   const { rsos, loading: rsosLoading } = useRsos(formData.eventType === "RSO");
-
-  // Update rsoId when RSOs are loaded for RSO events
-  useEffect(() => {
-    if (formData.eventType === "RSO" && rsos.length > 0 && !formData.rsoId) {
-      setFormData((prev) => ({
-        ...prev,
-        rsoId: rsos[0].id,
-      }));
-    }
-  }, [rsos, formData.eventType]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -59,12 +40,19 @@ const CreateEventForm: React.FC = () => {
   ) => {
     const { name, value } = e.target;
 
-    // Special handling for event type and RSO
+    // Special handling for event type
     if (name === "eventType") {
+      const newEventType = value as EventType;
       setFormData((prev) => ({
         ...prev,
-        eventType: value as EventType,
-        rsoId: value === "RSO" ? undefined : prev.rsoId,
+        eventType: newEventType,
+        // Reset RSO for non-RSO events
+        rsoId: newEventType === "RSO" ? undefined : prev.rsoId,
+      }));
+    } else if (name === "collegeId") {
+      setFormData((prev) => ({
+        ...prev,
+        collegeId: parseInt(value),
       }));
     } else {
       setFormData((prev) => ({
@@ -83,6 +71,12 @@ const CreateEventForm: React.FC = () => {
       !selectedLocation.address
     ) {
       toast.error("Please select a location and fill in name/address");
+      return;
+    }
+
+    // Validate college for private events
+    if (formData.eventType === "PRIVATE" && !formData.collegeId) {
+      toast.error("Please select a college for the private event");
       return;
     }
 
@@ -105,6 +99,7 @@ const CreateEventForm: React.FC = () => {
       // Reset form, keeping collegeId
       setFormData({
         ...initialFormData,
+        eventType: formData.eventType,
         collegeId: formData.collegeId,
       });
       setSelectedLocation(null);
@@ -197,6 +192,43 @@ const CreateEventForm: React.FC = () => {
             <option value="RSO">RSO</option>
           </select>
         </div>
+
+        {/* College Selection for Private and RSO Events */}
+        {(formData.eventType === "PRIVATE" || formData.eventType === "RSO") && (
+          <div className="col-span-1">
+            <label
+              htmlFor="collegeId"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {formData.eventType === "PRIVATE"
+                ? "College (Private Event)"
+                : "RSO College"}
+            </label>
+            {collegesLoading ? (
+              <div className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-gray-50 rounded-md shadow-sm">
+                Loading colleges...
+              </div>
+            ) : colleges.length === 0 ? (
+              <div className="mt-1 block w-full py-2 px-3 border border-red-300 bg-red-50 rounded-md shadow-sm text-red-500">
+                No colleges available.
+              </div>
+            ) : (
+              <select
+                name="collegeId"
+                value={formData.collegeId || ""}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                {colleges.map((college: College) => (
+                  <option key={college.id} value={college.id}>
+                    {college.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
 
         {/* RSO Selection - Only show when event type is RSO */}
         {formData.eventType === "RSO" && (
